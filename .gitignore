@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Logs & temp
+*.log
+.system_generated/
+scratch/
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment / local settings
+.env
+.env.local

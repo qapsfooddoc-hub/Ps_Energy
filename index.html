@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบแดชบอร์ดและบันทึกข้อมูลค่าใช้จ่ายด้านพลังงาน</title>
+  
+  <!-- Google Fonts: Niramit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Niramit:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Design System Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Chart.js, SheetJS & ExcelJS Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="js/exceljs.min.js"></script>
+</head>
+<body>
+
+  <div id="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div class="brand-title">
+          <h1>Energy Executive</h1>
+          <p>ระบบบริหารจัดการพลังงาน</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a class="nav-item active" data-view="dashboard-view">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>แดชบอร์ด & เปรียบเทียบ</span>
+        </a>
+        <a class="nav-item" data-view="resource-unit-view">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>ราคาต่อหน่วย 4 พลังงาน</span>
+        </a>
+        <a class="nav-item locked" data-view="entry-view" id="nav-entry-link">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span>บันทึกข้อมูลใหม่ <i class="fa-solid fa-lock" style="font-size:0.85rem; margin-left:auto; opacity:0.6;"></i></span>
+        </a>
+        <a class="nav-item" data-view="history-view">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>ประวัติการบันทึก</span>
+        </a>
+        <a class="nav-item locked" data-view="audit-view" id="nav-audit-link">
+          <i class="fa-solid fa-clipboard-check"></i>
+          <span>ประวัติการแก้ไข <i class="fa-solid fa-lock" style="font-size:0.85rem; margin-left:auto; opacity:0.6;"></i></span>
+        </a>
+        <a class="nav-item" data-view="sheet-view">
+          <i class="fa-solid fa-table-cells"></i>
+          <span>ตารางสรุป Excel</span>
+        </a>
+        <a class="nav-item" data-view="reports-view">
+          <i class="fa-solid fa-file-export"></i>
+          <span>รายงาน & Export</span>
+        </a>
+        <a class="nav-item" data-view="manual-view" id="nav-manual-link">
+          <i class="fa-solid fa-book-open"></i>
+          <span>คู่มือการใช้งาน</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="theme-toggle" class="theme-toggle-btn">
+          <i class="fa-solid fa-moon"></i>
+          <span>Dark Mode</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+      
+      <!-- Top App Header -->
+      <header class="top-header">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <button id="mobile-menu-toggle" class="mobile-nav-toggle">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="page-title">
+            <h2 id="current-page-title">📊 แดชบอร์ดวิเคราะห์และเปรียบเทียบพลังงานเชิงบริหาร</h2>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="change-pwd-btn" class="btn btn-warning btn-sm" onclick="showChangePasswordModal()" style="display:none;">
+            <i class="fa-solid fa-key"></i>
+            <span>จัดการรหัสผ่าน</span>
+          </button>
+          <button id="auth-user-btn" class="btn btn-secondary btn-sm" onclick="toggleAuthAction()">
+            <i class="fa-solid fa-lock"></i>
+            <span>เข้าสู่ระบบ (QA/EMR)</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="resetToDefaultData()">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>รีเซ็ตข้อมูล</span>
+          </button>
+          <button class="btn btn-success btn-sm" onclick="exportToExcel()">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>Export Excel</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main View Area -->
+      <main class="content-area">
+        
+        <!-- SECTION 1: MAIN DASHBOARD & YOY COMPARISON VIEW -->
+        <section id="dashboard-view" class="view-section active">
+          
+          <!-- Executive Multi-Year Control Bar with Month Filter -->
+          <div class="table-card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #ffffff, #f8fafc);">
+            <div class="chart-card-header" style="margin-bottom: 0;">
+              <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+                
+                <div class="form-group" style="width: 170px;">
+                  <label><i class="fa-solid fa-calendar-check" style="color:var(--color-primary);"></i> ปีที่วิเคราะห์หลัก</label>
+                  <select id="dash-year-select" class="form-control" style="font-weight:700; color:var(--color-primary);"></select>
+                </div>
+
+                <div class="form-group" style="width: 180px;">
+                  <label><i class="fa-solid fa-code-compare" style="color:var(--color-accent);"></i> เปรียบเทียบกับปี (YoY)</label>
+                  <select id="dash-compare-year-select" class="form-control" style="font-weight:700; color:var(--color-accent);"></select>
+                </div>
+
+                <!-- MONTH FILTER DROPDOWN -->
+                <div class="form-group" style="width: 210px;">
+                  <label><i class="fa-solid fa-filter" style="color:#059669;"></i> ตัวกรองเดือน</label>
+                  <select id="dash-month-filter" class="form-control" style="font-weight:700; color:var(--text-primary);">
+                    <option value="ALL" selected>ทุกเดือน (ภาพรวมสะสม)</option>
+                    <option value="มกราคม">มกราคม</option>
+                    <option value="กุมภาพันธ์">กุมภาพันธ์</option>
+                    <option value="มีนาคม">มีนาคม</option>
+                    <option value="เมษายน">เมษายน</option>
+                    <option value="พฤษภาคม">พฤษภาคม</option>
+                    <option value="มิถุนายน">มิถุนายน</option>
+                    <option value="กรกฎาคม">กรกฎาคม</option>
+                    <option value="สิงหาคม">สิงหาคม</option>
+                    <option value="กันยายน">กันยายน</option>
+                    <option value="ตุลาคม">ตุลาคม</option>
+                    <option value="พฤศจิกายน">พฤศจิกายน</option>
+                    <option value="ธันวาคม">ธันวาคม</option>
+                  </select>
+                </div>
+
+                <div id="ongoing-year-badge" style="display:none; font-size:0.925rem; background:#fffbeb; color:#b45309; border:1px solid #fde047; padding:0.4rem 0.8rem; border-radius:12px; font-weight:600;">
+                  <i class="fa-solid fa-spinner fa-spin"></i> ปีปัจจุบันอยู่ระหว่างรวบรวมข้อมูล (สรุปข้อมูลตามที่มีจริง)
+                </div>
+
+              </div>
+
+              <div style="font-size:0.925rem; color:var(--text-muted);">
+                <i class="fa-solid fa-database"></i> ฐานข้อมูลเปรียบเทียบพลังงานครอบคลุมหลายปี
+              </div>
+            </div>
+          </div>
+
+          <!-- DUAL YEAR SIDE-BY-SIDE KPI CARDS GRID -->
+          <div class="kpi-grid">
+            
+            <!-- KPI 1: TOTAL COST DUAL YEAR -->
+            <div class="kpi-card kpi-total">
+              <div class="kpi-header">
+                <span class="kpi-title">💰 ค่าใช้จ่ายพลังงานรวม</span>
+                <div class="kpi-icon-box"><i class="fa-solid fa-coins"></i></div>
+              </div>
+              
+              <div class="kpi-dual-row">
+                <div>
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cur"></span></div>
+                  <div class="kpi-val-primary" id="kpi-total-cost">0.00 ฿</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cmp"></span></div>
+                  <div class="kpi-val-cmp" id="kpi-total-cost-cmp">0.00 ฿</div>
+                </div>
+              </div>
+
+              <div class="kpi-subtext">
+                <span>ผลต่าง / การเปลี่ยนแปลง:</span>
+                <span id="kpi-total-yoy" class="badge-yoy-up">0%</span>
+              </div>
+            </div>
+
+            <!-- KPI 2: TOTAL PRODUCTION DUAL YEAR -->
+            <div class="kpi-card kpi-prod">
+              <div class="kpi-header">
+                <span class="kpi-title">🐖 ยอดการผลิตรวม</span>
+                <div class="kpi-icon-box"><i class="fa-solid fa-boxes-stacked"></i></div>
+              </div>
+              
+              <div class="kpi-dual-row">
+                <div>
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cur"></span></div>
+                  <div class="kpi-val-primary" id="kpi-total-prod" style="color:var(--color-accent);">0 ตัว</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cmp"></span></div>
+                  <div class="kpi-val-cmp" id="kpi-total-prod-cmp">0 ตัว</div>
+                </div>
+              </div>
+
+              <div class="kpi-subtext">
+                <span>ผลต่าง / การเปลี่ยนแปลง:</span>
+                <span id="kpi-prod-yoy" class="badge-yoy-down">0%</span>
+              </div>
+            </div>
+
+            <!-- KPI 3: COST PER UNIT DUAL YEAR -->
+            <div class="kpi-card kpi-avg">
+              <div class="kpi-header">
+                <span class="kpi-title">📈 ต้นทุนพลังงานต่อยอดผลิต</span>
+                <div class="kpi-icon-box"><i class="fa-solid fa-chart-line"></i></div>
+              </div>
+              
+              <div class="kpi-dual-row">
+                <div>
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cur"></span></div>
+                  <div class="kpi-val-primary" id="kpi-avg-cost-unit" style="color:var(--color-water);">0.00 ฿/ตัว</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cmp"></span></div>
+                  <div class="kpi-val-cmp" id="kpi-avg-cost-unit-cmp">0.00 ฿/ตัว</div>
+                </div>
+              </div>
+
+              <div class="kpi-subtext">
+                <span>ประสิทธิภาพต้นทุน (YoY):</span>
+                <span id="kpi-unit-yoy" class="badge-yoy-down">0%</span>
+              </div>
+            </div>
+
+            <!-- KPI 4: ELECTRICITY COST DUAL YEAR -->
+            <div class="kpi-card kpi-elec">
+              <div class="kpi-header">
+                <span class="kpi-title">⚡ ค่าไฟฟ้าประจำปี (หลัก)</span>
+                <div class="kpi-icon-box"><i class="fa-solid fa-bolt"></i></div>
+              </div>
+              
+              <div class="kpi-dual-row">
+                <div>
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cur"></span></div>
+                  <div class="kpi-val-primary" id="kpi-elec-cost" style="color:var(--color-elec);">0.00 ฿</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="kpi-year-label">ปี <span class="lbl-yr-cmp"></span></div>
+                  <div class="kpi-val-cmp" id="kpi-elec-cost-cmp">0.00 ฿</div>
+                </div>
+              </div>
+
+              <div class="kpi-subtext">
+                <span>ผลต่าง / การเปลี่ยนแปลง:</span>
+                <span id="kpi-elec-yoy" class="badge-yoy-up">0%</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- EXECUTIVE INSIGHTS & ANOMALY ANALYSIS PANEL -->
+          <div class="insight-card">
+            <div class="insight-header">
+              <div class="insight-title">
+                <i class="fa-solid fa-lightbulb" style="color: #f59e0b; font-size:1.3rem;"></i>
+                <span>บทวิเคราะห์พลังงานและสิ่งผิดปกติ (Executive Insights & Cost Drivers Analysis)</span>
+              </div>
+              <div style="font-size:0.875rem; color:var(--text-muted);">
+                วิเคราะห์เชิงเปรียบเทียบอัตโนมัติประจำปี <span class="lbl-yr-cur"></span> vs <span class="lbl-yr-cmp"></span>
+              </div>
+            </div>
+
+            <div id="executive-insights-container" class="insight-grid">
+              <!-- Rendered dynamically by dashboard.js -->
+            </div>
+          </div>
+
+          <!-- Charts Section 1: Monthly Cost Comparison & Cost Per Production Trend -->
+          <div class="charts-grid-equal">
+            
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-chart-line" style="color: var(--color-primary);"></i>
+                  <span>เปรียบเทียบค่าใช้จ่ายรายเดือน (<span id="chart-year-label">ปีปัจจุบัน</span> vs <span id="chart-compare-label">ปีก่อนหน้า</span>)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="yoyMonthlyChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-scale-balanced" style="color: #9333ea;"></i>
+                  <span>เปรียบเทียบค่าใช้จ่ายเฉลี่ยต่อยอดผลิตรายเดือน (บาท/ตัว) (<span id="unit-cost-year-label">ปีปัจจุบัน</span> vs <span id="unit-cost-cmp-label">ปีก่อนหน้า</span>)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="yoyUnitCostChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Charts Section 2: Multi-Year History & Energy Breakdown -->
+          <div class="charts-grid">
+            
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-chart-column" style="color: #059669;"></i>
+                  <span>แนวโน้มค่าใช้จ่ายพลังงานรวมประวัติศาสตร์รายปี</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="multiYearHistoryChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-chart-pie" style="color: var(--color-accent);"></i>
+                  <span>สัดส่วนพลังงาน (<span id="pie-year-label">ปีที่เลือก</span>)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="pieChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Year-over-Year Comparative Table Card -->
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-table-list" style="color: var(--color-primary);"></i>
+                <span>ตารางเปรียบเทียบค่าใช้จ่ายและยอดผลิตรายเดือน (<span id="tbl-year-label">ปีปัจจุบัน</span> vs <span id="tbl-compare-label">ปีก่อนหน้า</span>)</span>
+              </div>
+            </div>
+            <div class="table-responsive table-freeze-container">
+              <table class="custom-table table-freeze">
+                <thead>
+                  <tr>
+                    <th class="freeze-corner">ประจำเดือน</th>
+                    <th>ค่าใช้จ่ายปี <span class="tbl-yr-cur"></span> (บาท)</th>
+                    <th>ค่าใช้จ่ายปี <span class="tbl-yr-cmp"></span> (บาท)</th>
+                    <th>ผลต่าง (บาท)</th>
+                    <th>ค่าใช้จ่าย (% YoY)</th>
+                    <th>ยอดผลิตปี <span class="tbl-yr-cur"></span> (ตัว)</th>
+                    <th>ยอดผลิตปี <span class="tbl-yr-cmp"></span> (ตัว)</th>
+                    <th>เปลี่ยนแปลง ยอดผลิต (% YoY)</th>
+                    <th>บาท/ตัว (<span class="tbl-yr-cur"></span>)</th>
+                    <th>บาท/ตัว (<span class="tbl-yr-cmp"></span>)</th>
+                    <th>เปลี่ยนแปลง บาท/ตัว (% YoY)</th>
+                  </tr>
+                </thead>
+                <tbody id="yoy-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+                <tfoot id="yoy-table-foot">
+                  <!-- Rendered dynamically -->
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- RECORDS HISTORY AT BOTTOM OF DASHBOARD PAGE -->
+          <div class="table-card" id="history-bottom-card" style="margin-top: 2rem; border-top: 4px solid var(--color-primary);">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--color-primary);"></i>
+                <span>📜 ประวัติรายการบันทึกข้อมูลค่าใช้จ่ายพลังงานย้อนหลังประจำปี <span class="tbl-yr-cur"></span></span>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ประจำเดือน</th>
+                    <th>ยอดการผลิต (ตัว)</th>
+                    <th>💧 ค่าน้ำ</th>
+                    <th>⚡ ค่าไฟฟ้า</th>
+                    <th>⛽ น้ำมัน</th>
+                    <th>🔥 แก๊ส LPG</th>
+                    <th>รวมค่าพลังงาน</th>
+                    <th>บาท/ตัว</th>
+                    <th>แก้ไขล่าสุด</th>
+                    <th>จัดการข้อมูล</th>
+                  </tr>
+                </thead>
+                <tbody id="dash-history-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- SECTION 2: RESOURCE UNIT RATE DASHBOARD (ราคาต่อหน่วย 4 พลังงาน) -->
+        <section id="resource-unit-view" class="view-section">
+          
+          <div class="table-card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #ffffff, #f0f9ff);">
+            <div class="chart-card-header" style="margin-bottom: 0;">
+              <div>
+                <h3 style="font-size: 1.15rem; font-weight:700; color:var(--text-primary);">
+                  <i class="fa-solid fa-sliders" style="color:var(--color-primary);"></i> วิเคราะห์ราคาพลังงานต่อหน่วย (Unit Rate Analysis: บาท/หน่วย)
+                </h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+                  คำนวณจาก (ค่าใช้จ่ายบาท / ปริมาณการใช้) เพื่อดูความผันผวนของราคาพลังงาน
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 RESOURCE UNIT RATE KPI CARDS -->
+          <div class="kpi-grid">
+            
+            <!-- WATER UNIT RATE -->
+            <div class="kpi-card" style="border-top: 4px solid var(--color-water);">
+              <div class="kpi-header">
+                <span class="kpi-title">💧 ราคาค่าน้ำเฉลี่ยต่อหน่วย</span>
+                <div class="kpi-icon-box" style="background:var(--color-water-bg); color:var(--color-water);"><i class="fa-solid fa-droplet"></i></div>
+              </div>
+              <div class="kpi-val-primary" id="kpi-unit-water" style="color:var(--color-water);">0.00 ฿/ลบ.ม.</div>
+              <div class="kpi-subtext" style="margin-top:8px;">
+                <span>เทียบปีก่อนหน้า (YoY):</span>
+                <span id="kpi-unit-water-yoy" class="badge-yoy-down">0%</span>
+              </div>
+            </div>
+
+            <!-- ELEC UNIT RATE -->
+            <div class="kpi-card" style="border-top: 4px solid var(--color-elec);">
+              <div class="kpi-header">
+                <span class="kpi-title">⚡ ราคาค่าไฟฟ้าเฉลี่ยต่อหน่วย</span>
+                <div class="kpi-icon-box" style="background:var(--color-elec-bg); color:var(--color-elec);"><i class="fa-solid fa-bolt"></i></div>
+              </div>
+              <div class="kpi-val-primary" id="kpi-unit-elec" style="color:var(--color-elec);">0.00 ฿/kWh</div>
+              <div class="kpi-subtext" style="margin-top:8px;">
+                <span>เทียบปีก่อนหน้า (YoY):</span>
+                <span id="kpi-unit-elec-yoy" class="badge-yoy-up">0%</span>
+              </div>
+            </div>
+
+            <!-- GAS UNIT RATE -->
+            <div class="kpi-card" style="border-top: 4px solid var(--color-gas);">
+              <div class="kpi-header">
+                <span class="kpi-title">🔥 ราคาแก๊ส LPG เฉลี่ยต่อหน่วย</span>
+                <div class="kpi-icon-box" style="background:var(--color-gas-bg); color:var(--color-gas);"><i class="fa-solid fa-fire-flame-simple"></i></div>
+              </div>
+              <div class="kpi-val-primary" id="kpi-unit-gas" style="color:var(--color-gas);">0.00 ฿/kg</div>
+              <div class="kpi-subtext" style="margin-top:8px;">
+                <span>เทียบปีก่อนหน้า (YoY):</span>
+                <span id="kpi-unit-gas-yoy" class="badge-yoy-down">0%</span>
+              </div>
+            </div>
+
+            <!-- FUEL UNIT RATE -->
+            <div class="kpi-card" style="border-top: 4px solid var(--color-fuel);">
+              <div class="kpi-header">
+                <span class="kpi-title">⛽ ราคาน้ำมันเชื้อเพลิงต่อหน่วย</span>
+                <div class="kpi-icon-box" style="background:var(--color-fuel-bg); color:var(--color-fuel);"><i class="fa-solid fa-gas-pump"></i></div>
+              </div>
+              <div class="kpi-val-primary" id="kpi-unit-fuel" style="color:var(--color-fuel);">0.00 ฿/ลิตร</div>
+              <div class="kpi-subtext" style="margin-top:8px;">
+                <span>เทียบปีก่อนหน้า (YoY):</span>
+                <span id="kpi-unit-fuel-yoy" class="badge-yoy-down">0%</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- MASTER OVERALL COST PER PRODUCTION TREND CHART (บาท/ตัว) -->
+          <div class="chart-card" style="margin-bottom: 2rem; border-left: 5px solid #9333ea;">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-scale-balanced" style="color: #9333ea;"></i>
+                <span>แนวโน้มค่าใช้จ่ายด้านพลังงานรวมเฉลี่ยต่อยอดผลิต (บาท/ตัว) เปรียบเทียบ (<span class="tbl-yr-cur"></span> vs <span class="tbl-yr-cmp"></span>)</span>
+              </div>
+              <div style="font-size:0.925rem; font-weight:700; color:#9333ea;" id="overview-unit-cost-badge">
+              </div>
+            </div>
+            <div class="chart-wrapper" style="height: 380px;">
+              <canvas id="totalUnitCostTrendChart"></canvas>
+            </div>
+            <!-- Production Details Strip under chart -->
+            <div id="unit-cost-prod-strip" class="table-responsive" style="margin-top: 1rem; border-top: 1px dashed #e2e8f0; padding-top: 0.85rem;">
+            </div>
+          </div>
+
+          <!-- 4 RESOURCE UNIT RATE LINE CHARTS GRID (EQUAL 50/50 2x2 GRID) -->
+          <div class="charts-grid-equal">
+            
+            <!-- WATER PRICE TREND CHART -->
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-droplet" style="color: var(--color-water);"></i>
+                  <span>แนวโน้มราคาค่าน้ำต่อหน่วย (บาท/ลบ.ม.)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="waterUnitChart"></canvas>
+              </div>
+            </div>
+
+            <!-- ELEC PRICE TREND CHART -->
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-bolt" style="color: var(--color-elec);"></i>
+                  <span>แนวโน้มราคาค่าไฟฟ้าต่อหน่วย (บาท/kWh)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="elecUnitChart"></canvas>
+              </div>
+            </div>
+
+            <!-- GAS PRICE TREND CHART -->
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-fire" style="color: var(--color-gas);"></i>
+                  <span>แนวโน้มราคาแก๊ส LPG ต่อหน่วย (บาท/กิโลกรัม)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="gasUnitChart"></canvas>
+              </div>
+            </div>
+
+            <!-- FUEL PRICE TREND CHART -->
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-gas-pump" style="color: var(--color-fuel);"></i>
+                  <span>แนวโน้มราคาน้ำมันเชื้อเพลิงต่อหน่วย (บาท/ลิตร)</span>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="fuelUnitChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- PAIRED COLUMNS DETAILED RESOURCE UNIT COST COMPARISON TABLE -->
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-table-cells" style="color: var(--color-primary);"></i>
+                <span>ตารางรายละเอียดราคาต่อหน่วยคอลัมน์คู่ (<span class="tbl-yr-cur"></span> vs <span class="tbl-yr-cmp"></span>) พร้อมทิศทางขึ้น/ลง</span>
+              </div>
+            </div>
+
+            <div class="table-responsive table-freeze-container">
+              <table class="custom-table table-freeze" style="border: 1px solid var(--border-color);">
+                <thead>
+                  <tr class="freeze-row-1" style="background: #f1f5f9; text-align:center;">
+                    <th rowspan="2" class="freeze-corner" style="vertical-align:middle; text-align:left;">ประจำเดือน</th>
+                    <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#e0f2fe; color:#0369a1; border-left:1px solid #bae6fd; border-right:1px solid #bae6fd;">💧 ค่าน้ำ (บาท/ลบ.ม.)</th>
+                    <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#fef3c7; color:#b45309; border-right:1px solid #fde047;">⚡ ค่าไฟฟ้า (บาท/kWh)</th>
+                    <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#d1fae5; color:#047857; border-right:1px solid #a7f3d0;">🔥 แก๊ส LPG (บาท/kg)</th>
+                    <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#ffe4e6; color:#be123c; border-right:1px solid #fecdd3;">⛽ น้ำมัน (บาท/ลิตร)</th>
+                  </tr>
+                  <tr class="freeze-row-2" style="background: #f8fafc; font-size:0.925rem; text-align:center;">
+                    <!-- Water Paired Columns -->
+                    <th style="background:#f0f9ff; color:#0284c7;"><span class="tbl-yr-cur"></span></th>
+                    <th style="background:#f0f9ff; color:#0284c7;"><span class="tbl-yr-cmp"></span></th>
+                    <th style="background:#f0f9ff; color:#0284c7;">เปลี่ยนแปลง</th>
+
+                    <!-- Elec Paired Columns -->
+                    <th style="background:#fffbeb; color:#d97706;"><span class="tbl-yr-cur"></span></th>
+                    <th style="background:#fffbeb; color:#d97706;"><span class="tbl-yr-cmp"></span></th>
+                    <th style="background:#fffbeb; color:#d97706;">เปลี่ยนแปลง</th>
+
+                    <!-- Gas Paired Columns -->
+                    <th style="background:#ecfdf5; color:#059669;"><span class="tbl-yr-cur"></span></th>
+                    <th style="background:#ecfdf5; color:#059669;"><span class="tbl-yr-cmp"></span></th>
+                    <th style="background:#ecfdf5; color:#059669;">เปลี่ยนแปลง</th>
+
+                    <!-- Fuel Paired Columns -->
+                    <th style="background:#fff1f2; color:#e11d48;"><span class="tbl-yr-cur"></span></th>
+                    <th style="background:#fff1f2; color:#e11d48;"><span class="tbl-yr-cmp"></span></th>
+                    <th style="background:#fff1f2; color:#e11d48;">เปลี่ยนแปลง</th>
+                  </tr>
+                </thead>
+                <tbody id="unit-rate-table-body">
+                  <!-- Rendered dynamically by dashboard.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ======================================================== -->
+          <!-- 4 ENERGY COST PER HEAD SECTION (บาท/ตัว)                -->
+          <!-- ======================================================== -->
+          <div style="margin-top: 3rem; margin-bottom: 1.5rem; border-top: 2px dashed var(--border-color); padding-top: 2rem;">
+            <div class="page-header" style="margin-bottom: 1.5rem;">
+              <div class="page-title-box">
+                <h1 style="font-size: 1.5rem;">
+                  <i class="fa-solid fa-piggy-bank" style="color: #9333ea; margin-right: 8px;"></i>
+                  แดชบอร์ดค่าใช้จ่ายพลังงานเฉลี่ยต่อยอดผลิต (Cost Per Head: 4 พลังงาน)
+                </h1>
+                <p class="text-secondary" style="font-size: 0.95rem; margin-top: 4px;">
+                  วิเคราะห์ต้นทุนค่าใช้จ่ายพลังงานต่อการผลิตหมู 1 ตัว (บาท/ตัว) เปรียบเทียบ (<span class="tbl-yr-cur"></span> vs <span class="tbl-yr-cmp"></span>)
+                </p>
+              </div>
+            </div>
+
+            <!-- 4 COST PER HEAD KPI CARDS -->
+            <div class="kpi-grid">
+              
+              <!-- WATER COST PER HEAD -->
+              <div class="kpi-card" style="border-top: 4px solid var(--color-water);">
+                <div class="kpi-header">
+                  <span class="kpi-title">💧 ค่าน้ำเฉลี่ย ต่อยอดผลิต</span>
+                  <div class="kpi-icon-box" style="background:var(--color-water-bg); color:var(--color-water);"><i class="fa-solid fa-droplet"></i></div>
+                </div>
+                <div class="kpi-val-primary" id="kpi-head-water" style="color:var(--color-water);">0.00 ฿/ตัว</div>
+                <div class="kpi-subtext" style="margin-top:8px;">
+                  <span>เทียบปีก่อนหน้า (YoY):</span>
+                  <span id="kpi-head-water-yoy" class="badge-yoy-down">0%</span>
+                </div>
+              </div>
+
+              <!-- ELEC COST PER HEAD -->
+              <div class="kpi-card" style="border-top: 4px solid var(--color-elec);">
+                <div class="kpi-header">
+                  <span class="kpi-title">⚡ ค่าไฟฟ้าเฉลี่ย ต่อยอดผลิต</span>
+                  <div class="kpi-icon-box" style="background:var(--color-elec-bg); color:var(--color-elec);"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="kpi-val-primary" id="kpi-head-elec" style="color:var(--color-elec);">0.00 ฿/ตัว</div>
+                <div class="kpi-subtext" style="margin-top:8px;">
+                  <span>เทียบปีก่อนหน้า (YoY):</span>
+                  <span id="kpi-head-elec-yoy" class="badge-yoy-up">0%</span>
+                </div>
+              </div>
+
+              <!-- GAS COST PER HEAD -->
+              <div class="kpi-card" style="border-top: 4px solid var(--color-gas);">
+                <div class="kpi-header">
+                  <span class="kpi-title">🔥 ค่าแก๊ส LPG เฉลี่ย ต่อยอดผลิต</span>
+                  <div class="kpi-icon-box" style="background:var(--color-gas-bg); color:var(--color-gas);"><i class="fa-solid fa-fire-flame-simple"></i></div>
+                </div>
+                <div class="kpi-val-primary" id="kpi-head-gas" style="color:var(--color-gas);">0.00 ฿/ตัว</div>
+                <div class="kpi-subtext" style="margin-top:8px;">
+                  <span>เทียบปีก่อนหน้า (YoY):</span>
+                  <span id="kpi-head-gas-yoy" class="badge-yoy-down">0%</span>
+                </div>
+              </div>
+
+              <!-- FUEL COST PER HEAD -->
+              <div class="kpi-card" style="border-top: 4px solid var(--color-fuel);">
+                <div class="kpi-header">
+                  <span class="kpi-title">⛽ ค่าน้ำมันเฉลี่ย ต่อยอดผลิต</span>
+                  <div class="kpi-icon-box" style="background:var(--color-fuel-bg); color:var(--color-fuel);"><i class="fa-solid fa-gas-pump"></i></div>
+                </div>
+                <div class="kpi-val-primary" id="kpi-head-fuel" style="color:var(--color-fuel);">0.00 ฿/ตัว</div>
+                <div class="kpi-subtext" style="margin-top:8px;">
+                  <span>เทียบปีก่อนหน้า (YoY):</span>
+                  <span id="kpi-head-fuel-yoy" class="badge-yoy-down">0%</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 4 COST PER HEAD LINE CHARTS GRID (EQUAL 50/50 2x2 GRID) -->
+            <div class="charts-grid-equal">
+              
+              <!-- WATER HEAD COST CHART -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <i class="fa-solid fa-droplet" style="color: var(--color-water);"></i>
+                    <span>แนวโน้มค่าน้ำเฉลี่ยต่อยอดผลิต (บาท/ตัว)</span>
+                  </div>
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="waterHeadChart"></canvas>
+                </div>
+              </div>
+
+              <!-- ELEC HEAD COST CHART -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <i class="fa-solid fa-bolt" style="color: var(--color-elec);"></i>
+                    <span>แนวโน้มค่าไฟฟ้าเฉลี่ยต่อยอดผลิต (บาท/ตัว)</span>
+                  </div>
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="elecHeadChart"></canvas>
+                </div>
+              </div>
+
+              <!-- GAS HEAD COST CHART -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <i class="fa-solid fa-fire" style="color: var(--color-gas);"></i>
+                    <span>แนวโน้มค่าแก๊ส LPG เฉลี่ยต่อยอดผลิต (บาท/ตัว)</span>
+                  </div>
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="gasHeadChart"></canvas>
+                </div>
+              </div>
+
+              <!-- FUEL HEAD COST CHART -->
+              <div class="chart-card">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <i class="fa-solid fa-gas-pump" style="color: var(--color-fuel);"></i>
+                    <span>แนวโน้มค่าน้ำมันเชื้อเพลิงเฉลี่ยต่อยอดผลิต (บาท/ตัว)</span>
+                  </div>
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="fuelHeadChart"></canvas>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- PAIRED COLUMNS DETAILED HEAD COST TABLE -->
+            <div class="table-card">
+              <div class="chart-card-header">
+                <div class="chart-card-title">
+                  <i class="fa-solid fa-table-list" style="color: #9333ea;"></i>
+                  <span>ตารางรายละเอียดค่าใช้จ่ายพลังงานต่อตัวคอลัมน์คู่ (บาท/ตัว) (<span class="tbl-yr-cur"></span> vs <span class="tbl-yr-cmp"></span>)</span>
+                </div>
+              </div>
+
+              <div class="table-responsive table-freeze-container">
+                <table class="custom-table table-freeze" style="border: 1px solid var(--border-color);">
+                  <thead>
+                    <tr class="freeze-row-1" style="background: #f1f5f9; text-align:center;">
+                      <th rowspan="2" class="freeze-corner" style="vertical-align:middle; text-align:left;">ประจำเดือน</th>
+                      <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#e0f2fe; color:#0369a1; border-left:1px solid #bae6fd; border-right:1px solid #bae6fd;">💧 ค่าน้ำ (บาท/ตัว)</th>
+                      <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#fef3c7; color:#b45309; border-right:1px solid #fde047;">⚡ ค่าไฟฟ้า (บาท/ตัว)</th>
+                      <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#d1fae5; color:#047857; border-right:1px solid #a7f3d0;">🔥 แก๊ส LPG (บาท/ตัว)</th>
+                      <th colspan="3" class="freeze-header-r1" style="text-align:center; background:#ffe4e6; color:#be123c; border-right:1px solid #fecdd3;">⛽ น้ำมัน (บาท/ตัว)</th>
+                    </tr>
+                    <tr class="freeze-row-2" style="background: #f8fafc; font-size:0.925rem; text-align:center;">
+                      <!-- Water Paired Columns -->
+                      <th style="background:#f0f9ff; color:#0284c7;"><span class="tbl-yr-cur"></span></th>
+                      <th style="background:#f0f9ff; color:#0284c7;"><span class="tbl-yr-cmp"></span></th>
+                      <th style="background:#f0f9ff; color:#0284c7;">เปลี่ยนแปลง</th>
+
+                      <!-- Elec Paired Columns -->
+                      <th style="background:#fffbeb; color:#d97706;"><span class="tbl-yr-cur"></span></th>
+                      <th style="background:#fffbeb; color:#d97706;"><span class="tbl-yr-cmp"></span></th>
+                      <th style="background:#fffbeb; color:#d97706;">เปลี่ยนแปลง</th>
+
+                      <!-- Gas Paired Columns -->
+                      <th style="background:#ecfdf5; color:#059669;"><span class="tbl-yr-cur"></span></th>
+                      <th style="background:#ecfdf5; color:#059669;"><span class="tbl-yr-cmp"></span></th>
+                      <th style="background:#ecfdf5; color:#059669;">เปลี่ยนแปลง</th>
+
+                      <!-- Fuel Paired Columns -->
+                      <th style="background:#fff1f2; color:#e11d48;"><span class="tbl-yr-cur"></span></th>
+                      <th style="background:#fff1f2; color:#e11d48;"><span class="tbl-yr-cmp"></span></th>
+                      <th style="background:#fff1f2; color:#e11d48;">เปลี่ยนแปลง</th>
+                    </tr>
+                  </thead>
+                  <tbody id="head-cost-table-body">
+                    <!-- Rendered dynamically by dashboard.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- SECTION 3: DATA ENTRY VIEW (LOCKED FOR GUEST) -->
+        <section id="entry-view" class="view-section">
+          
+          <!-- 1. LOCKED STATUS BANNER (WHEN SAVED - ข้อมูลล็อกเป็นสีเทา) -->
+          <div id="entry-locked-banner" class="entry-status-banner locked-banner" style="display:none;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="background:#fee2e2; color:#ef4444; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <div>
+                <div style="font-weight:700; color:#991b1b; font-size:1rem;">
+                  ข้อมูลประจำเดือนนี้ถูกบันทึกแล้ว (ล็อกข้อมูลเป็นสีเทา แก้ไขไม่ได้)
+                </div>
+                <div style="font-size:0.85rem; color:#b91c1c; opacity:0.9; margin-top:2px;">
+                  หากต้องการเปลี่ยนแปลงตัวเลข โปรดกดปุ่ม <strong>"แก้ไขข้อมูล"</strong>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-warning" onclick="startEditMode(appState.selectedMonth)" style="font-weight:700; white-space:nowrap; box-shadow:0 2px 8px rgba(245,158,11,0.3);">
+              <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
+            </button>
+          </div>
+
+          <!-- 2. EDIT MODE BANNER (WHEN IN EDIT MODE - ปลดล็อกให้แก้ไข) -->
+          <div id="edit-mode-banner" class="entry-status-banner editing-banner" style="display:none;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="background:#fef3c7; color:#d97706; width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </div>
+              <div>
+                <div style="font-weight:700; color:#92400e; font-size:1rem;" id="edit-banner-text">
+                  กำลังอยู่ในโหมดแก้ไขข้อมูล
+                </div>
+                <div style="font-size:0.85rem; color:#b45309; opacity:0.9; margin-top:2px;">
+                  ปลดล็อกช่องกรอกข้อมูลแล้ว — เมื่อแก้ไขเสร็จสิ้นให้กด <strong>"บันทึกการแก้ไขข้อมูล"</strong> เพื่อล็อกเป็นสีเทาอีกครั้ง
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn btn-success" onclick="saveEntryForm()" style="font-weight:700; white-space:nowrap;">
+                <i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไขข้อมูล
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="cancelEditMode()" style="white-space:nowrap;">
+                <i class="fa-solid fa-xmark"></i> ยกเลิก
+              </button>
+            </div>
+          </div>
+
+          <div class="table-card" style="margin-bottom: 1.5rem;">
+            <div class="chart-card-header" style="margin-bottom: 0;">
+              <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                
+                <div class="form-group" style="width: 170px;">
+                  <label><i class="fa-solid fa-calendar"></i> เลือกเดือน</label>
+                  <select id="entry-month-select" class="form-control"></select>
+                </div>
+
+                <div class="form-group" style="width: 140px;">
+                  <label><i class="fa-solid fa-calendar-days"></i> เลือกปี พ.ศ.</label>
+                  <select id="entry-year-select" class="form-control"></select>
+                </div>
+
+                <div class="form-group" style="width: 240px;">
+                  <label><i class="fa-solid fa-boxes-stacked"></i> ยอดการผลิตประจำเดือน (ตัว)</label>
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="number" id="input-prod-vol" class="form-control" placeholder="ระบุจำนวนตัว" min="0" max="9999999" oninput="handleEntryInput(this)" style="flex:1;">
+                    <button class="btn btn-success btn-sm" onclick="saveProdVol()" title="บันทึกยอดผลิต" style="white-space:nowrap; padding:0.55rem 0.85rem;">
+                      <i class="fa-solid fa-floppy-disk"></i>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <button id="entry-header-edit-btn" class="btn btn-warning btn-sm" onclick="startEditMode(appState.selectedMonth)" style="display:none; font-weight:700;">
+                  <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
+                </button>
+                <span class="entry-autosave-indicator" style="font-size:0.85rem; font-weight:600; color:#16a34a; display:inline-flex; align-items:center; gap:6px; background:#dcfce7; padding:4px 10px; border-radius:20px;">
+                  <i class="fa-solid fa-circle-check"></i> บันทึกข้อมูลค้างไว้เสมอ
+                </span>
+                <button class="btn btn-secondary btn-sm" onclick="addNewMonthCard()">
+                  <i class="fa-solid fa-circle-plus" style="color:var(--color-primary);"></i>
+                  <span>+ เพิ่มรอบบันทึกเดือนใหม่</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TOP SUMMARY CARDS FOR THE 4 MAIN RESOURCES -->
+          <div class="chart-card-header" style="margin-bottom: 1rem;">
+            <h3 style="font-size:1.15rem; font-weight:700; color:var(--text-primary);">
+              <i class="fa-solid fa-layer-group" style="color:var(--color-primary);"></i> สรุปรวม 4 ทรัพยากรหลัก (ลงบันทึกแยกทรัพยากรได้อิสระ)
+            </h3>
+          </div>
+
+          <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 2rem;">
+            
+            <div class="resource-card resource-card-water">
+              <div style="font-weight:700; color:var(--color-water); display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa-solid fa-droplet"></i> 1. ค่าน้ำ</span>
+                <span id="status-water" class="badge badge-status-pending">⏳ รอลงบันทึก</span>
+              </div>
+              <div style="margin: 10px 0;">
+                <div style="font-size:0.925rem; color:var(--text-secondary);">ปริมาณรวม: <strong id="res-water-usage" style="color:var(--text-primary);">0</strong> ลบ.ม.</div>
+                <div style="font-size:1.4rem; font-weight:700; color:var(--color-water);" id="res-water-cost">0.00 ฿</div>
+              </div>
+              <div style="font-size:0.875rem; color:var(--text-muted); border-top:1px dashed var(--color-water-border); padding-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>อัตราส่วน: <span id="res-water-cost-ratio">0.00 ฿/ตัว</span></span>
+                <button class="btn btn-sm btn-primary" onclick="saveResource('water')" style="padding:0.3rem 0.7rem; font-size:0.825rem;">
+                  <i class="fa-solid fa-floppy-disk"></i> บันทึกค่าน้ำ
+                </button>
+              </div>
+            </div>
+
+            <div class="resource-card resource-card-elec">
+              <div style="font-weight:700; color:var(--color-elec); display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa-solid fa-bolt"></i> 2. ค่าไฟฟ้า</span>
+                <span id="status-elec" class="badge badge-status-pending">⏳ รอลงบันทึก</span>
+              </div>
+              <div style="margin: 10px 0;">
+                <div style="font-size:0.925rem; color:var(--text-secondary);">ปริมาณรวม: <strong id="res-elec-usage" style="color:var(--text-primary);">0</strong> kWh</div>
+                <div style="font-size:1.4rem; font-weight:700; color:var(--color-elec);" id="res-elec-cost">0.00 ฿</div>
+              </div>
+              <div style="font-size:0.875rem; color:var(--text-muted); border-top:1px dashed var(--color-elec-border); padding-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>อัตราส่วน: <span id="res-elec-cost-ratio">0.00 ฿/ตัว</span></span>
+                <button class="btn btn-sm btn-warning" onclick="saveResource('elec')" style="padding:0.3rem 0.7rem; font-size:0.825rem;">
+                  <i class="fa-solid fa-floppy-disk"></i> บันทึกค่าไฟฟ้า
+                </button>
+              </div>
+            </div>
+
+            <div class="resource-card resource-card-fuel">
+              <div style="font-weight:700; color:var(--color-fuel); display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa-solid fa-gas-pump"></i> 3. น้ำมันเชื้อเพลิง</span>
+                <span id="status-fuel" class="badge badge-status-pending">⏳ รอลงบันทึก</span>
+              </div>
+              <div style="margin: 10px 0;">
+                <div style="font-size:0.925rem; color:var(--text-secondary);">ปริมาณรวม: <strong id="res-fuel-usage" style="color:var(--text-primary);">0</strong> ลิตร</div>
+                <div style="font-size:1.4rem; font-weight:700; color:var(--color-fuel);" id="res-fuel-cost">0.00 ฿</div>
+              </div>
+              <div style="font-size:0.875rem; color:var(--text-muted); border-top:1px dashed var(--color-fuel-border); padding-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>อัตราส่วน: <span id="res-fuel-cost-ratio">0.00 ฿/ตัว</span></span>
+                <button class="btn btn-sm btn-danger" onclick="saveResource('fuel')" style="padding:0.3rem 0.7rem; font-size:0.825rem;">
+                  <i class="fa-solid fa-floppy-disk"></i> บันทึกน้ำมัน
+                </button>
+              </div>
+            </div>
+
+            <div class="resource-card resource-card-gas">
+              <div style="font-weight:700; color:var(--color-gas); display:flex; justify-content:space-between; align-items:center;">
+                <span><i class="fa-solid fa-fire-flame-simple"></i> 4. แก๊ส (LPG)</span>
+                <span id="status-gas" class="badge badge-status-pending">⏳ รอลงบันทึก</span>
+              </div>
+              <div style="margin: 10px 0;">
+                <div style="font-size:0.925rem; color:var(--text-secondary);">ปริมาณรวม: <strong id="res-gas-usage" style="color:var(--text-primary);">0</strong> kg</div>
+                <div style="font-size:1.4rem; font-weight:700; color:var(--color-gas);" id="res-gas-cost">0.00 ฿</div>
+              </div>
+              <div style="font-size:0.875rem; color:var(--text-muted); border-top:1px dashed var(--color-gas-border); padding-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>อัตราส่วน: <span id="res-gas-cost-ratio">0.00 ฿/ตัว</span></span>
+                <button class="btn btn-sm btn-success" onclick="saveResource('gas')" style="padding:0.3rem 0.7rem; font-size:0.825rem;">
+                  <i class="fa-solid fa-floppy-disk"></i> บันทึกแก๊ส
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- GRAND TOTAL CARD -->
+          <div class="table-card" style="background: linear-gradient(135deg, #e0e7ff, #f3e8ff); border-color: rgba(79, 70, 229, 0.3); margin-bottom: 2rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px;">
+                  <span style="font-size:0.95rem; font-weight:700; color:var(--color-primary);">รวมค่าใช้จ่ายพลังงานทั้งหมดประจำเดือน</span>
+                  <span class="entry-autosave-indicator" style="font-size:0.75rem; padding:2px 8px; border-radius:12px; background:#dcfce7; color:#16a34a; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fa-solid fa-circle-check"></i> บันทึกข้อมูลค้างไว้เสมอ
+                  </span>
+                </div>
+                <div id="entry-grand-total-cost" style="font-size:2rem; font-weight:700; color:var(--text-primary);">0.00 ฿</div>
+              </div>
+              <div>
+                <div style="font-size:0.95rem; font-weight:700; color:var(--color-accent);">ค่าใช้จ่ายเฉลี่ยต่อยอดผลิต</div>
+                <div id="entry-grand-total-ratio" style="font-size:1.65rem; font-weight:700; color:var(--color-accent);">0.00 ฿/ตัว</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-METERS DATA ENTRY TABLES -->
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-droplet" style="color: var(--color-water);"></i>
+                <span>ตารางลงบันทึกมิเตอร์ย่อย ค่าน้ำ (7 มิเตอร์)</span>
+              </div>
+              <button class="btn btn-sm btn-primary" onclick="saveResource('water')">
+                <i class="fa-solid fa-floppy-disk"></i> บันทึกเฉพาะค่าน้ำ
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ลำดับ</th>
+                    <th>รหัสเครื่องวัด</th>
+                    <th>บ้านเลขที่</th>
+                    <th>สถานที่</th>
+                    <th>ปริมาณการใช้ (ลบ.ม.)</th>
+                    <th>จำนวนเงิน (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody id="entry-water-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-bolt" style="color: var(--color-elec);"></i>
+                <span>ตารางลงบันทึกมิเตอร์ย่อย ค่าไฟฟ้า (7 มิเตอร์)</span>
+              </div>
+              <button class="btn btn-sm btn-warning" onclick="saveResource('elec')">
+                <i class="fa-solid fa-floppy-disk"></i> บันทึกเฉพาะค่าไฟฟ้า
+              </button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ลำดับ</th>
+                    <th>รหัสเครื่องวัด</th>
+                    <th>บ้านเลขที่</th>
+                    <th>สถานที่</th>
+                    <th>ปริมาณการใช้ (kWh)</th>
+                    <th>จำนวนเงิน (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody id="entry-elec-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-fire" style="color: var(--color-fuel);"></i>
+                <span>ลงบันทึก น้ำมันเชื้อเพลิง และ แก๊ส (LPG)</span>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ประเภททรัพยากร</th>
+                    <th>ปริมาณการใช้</th>
+                    <th>หน่วย</th>
+                    <th>จำนวนเงิน (บาท)</th>
+                    <th>การบันทึก</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>⛽ 3. น้ำมันเชื้อเพลิง</strong></td>
+                    <td><input type="number" step="any" id="input-fuel-usage" class="form-control" placeholder="0" oninput="handleEntryInput(this)"></td>
+                    <td>ลิตร</td>
+                    <td><input type="number" step="any" id="input-fuel-cost" class="form-control" placeholder="0" oninput="handleEntryInput(this)"></td>
+                    <td>
+                      <button class="btn btn-sm btn-danger" onclick="saveResource('fuel')">
+                        <i class="fa-solid fa-floppy-disk"></i> บันทึกน้ำมัน
+                      </button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>🔥 4. แก๊ส (LPG)</strong></td>
+                    <td><input type="number" step="any" id="input-gas-usage" class="form-control" placeholder="0" oninput="handleEntryInput(this)"></td>
+                    <td>กิโลกรัม</td>
+                    <td><input type="number" step="any" id="input-gas-cost" class="form-control" placeholder="0" oninput="handleEntryInput(this)"></td>
+                    <td>
+                      <button class="btn btn-sm btn-success" onclick="saveResource('gas')">
+                        <i class="fa-solid fa-floppy-disk"></i> บันทึกแก๊ส
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <div id="edit-reason-group" class="form-group" style="display:none; margin-bottom: 1.25rem;">
+              <label style="color:#d97706;"><i class="fa-solid fa-triangle-exclamation"></i> สาเหตุในการแก้ไขข้อมูล (โปรดระบุเพื่อบันทึกประวัติการแก้ไข)</label>
+              <input type="text" id="input-edit-reason" class="form-control" placeholder="เช่น แก้ไขตัวเลขค่าไฟฟ้าตามบิลใหม่ที่แก้ไขเพิ่มเติม">
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-comment-dots"></i> หมายเหตุประจำเดือน</label>
+              <textarea id="input-remarks" class="form-control" rows="2" placeholder="ระบุหมายเหตุเพิ่มเติม (ถ้ามี)" oninput="handleEntryInput(this)"></textarea>
+            </div>
+
+            <div style="margin-top: 1.5rem; display:flex; justify-content:flex-end; gap:10px; align-items:center; flex-wrap:wrap;">
+              <button id="edit-entry-footer-btn" class="btn btn-warning btn-lg" onclick="startEditMode(appState.selectedMonth)" style="display:none; font-weight:700;">
+                <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
+              </button>
+              <button id="cancel-entry-footer-btn" class="btn btn-secondary btn-lg" onclick="cancelEditMode()" style="display:none;">
+                <i class="fa-solid fa-xmark"></i> ยกเลิกการแก้ไข
+              </button>
+              <button id="save-entry-footer-btn" class="btn btn-primary btn-lg" onclick="saveEntryForm()">
+                <i class="fa-solid fa-floppy-disk"></i> <span id="save-btn-label-footer">บันทึกทั้งหมดประจำเดือน</span>
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- SECTION 4: RECORDS HISTORY VIEW (STANDALONE TAB) -->
+        <section id="history-view" class="view-section">
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-clock-rotate-left" style="color: var(--color-primary);"></i>
+                <span>ประวัติรายการบันทึกข้อมูลค่าใช้จ่ายพลังงานย้อนหลัง</span>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>ประจำเดือน</th>
+                    <th>ยอดการผลิต (ตัว)</th>
+                    <th>💧 ค่าน้ำ</th>
+                    <th>⚡ ค่าไฟฟ้า</th>
+                    <th>⛽ น้ำมัน</th>
+                    <th>🔥 แก๊ส LPG</th>
+                    <th>รวมค่าพลังงาน</th>
+                    <th>บาท/ตัว</th>
+                    <th>แก้ไขล่าสุด</th>
+                    <th>จัดการข้อมูล</th>
+                  </tr>
+                </thead>
+                <tbody id="history-table-body">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- SECTION 5: AUDIT LOG VIEW (LOCKED FOR GUEST) -->
+        <section id="audit-view" class="view-section">
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-clipboard-check" style="color: var(--color-accent);"></i>
+                <span>ประวัติการแก้ไขข้อมูลกรณีผิดพลาด (Audit Log Trail)</span>
+              </div>
+            </div>
+
+            <div id="audit-logs-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </section>
+
+
+        <!-- SECTION 6: EXCEL SPREADSHEET REPLICA VIEW -->
+        <section id="sheet-view" class="view-section">
+          <div class="table-card" style="background:#ffffff; border-color:#cbd5e1;">
+            <div class="chart-card-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+              <h3 id="sheet-title" style="font-size: 1.25rem; font-weight:700;">สรุปค่าใช้จ่ายด้านพลังงาน</h3>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <select id="sheet-month-select" class="form-control" style="width: 180px;"></select>
+                <button class="btn btn-secondary btn-sm" onclick="printReport()">
+                  <i class="fa-solid fa-print"></i> พิมพ์รายงาน
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive" style="margin-top: 1rem;">
+              <table class="custom-table" style="border: 1px solid var(--border-color);">
+                <thead>
+                  <tr style="background: #f1f5f9;">
+                    <th style="text-align:center;">ลำดับที่</th>
+                    <th>ชื่อพลังงานที่ใช้</th>
+                    <th style="text-align:right;">ปริมาณการใช้</th>
+                    <th style="text-align:center;">หน่วยการใช้</th>
+                    <th style="text-align:right;">จำนวนเงิน (บาท)</th>
+                    <th style="text-align:right;">ยอดการผลิต (ตัว)</th>
+                    <th style="text-align:right;">ปริมาณการใช้/ยอดผลิต</th>
+                    <th style="text-align:right;">ค่าใช้จ่าย/ยอดผลิต</th>
+                  </tr>
+                </thead>
+                <tbody id="sheet-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+                <tfoot id="sheet-tfoot">
+                  <!-- Rendered dynamically -->
+                </tfoot>
+              </table>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display:flex; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+              <div>
+                <strong>หมายเหตุ : </strong> <span id="sheet-remarks">-</span>
+              </div>
+              <div style="display:flex; gap:40px;">
+                <div>
+                  <p>ผู้จัดทำ (QA)</p>
+                  <p style="margin-top:20px; color:var(--text-muted);">...................................................</p>
+                </div>
+                <div>
+                  <p>ผู้ตรวจสอบ (EMR)</p>
+                  <p style="margin-top:20px; color:var(--text-muted);">...................................................</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- SECTION 7: REPORTS & EXPORT VIEW -->
+        <section id="reports-view" class="view-section">
+          <div class="table-card">
+            <div class="chart-card-header">
+              <div class="chart-card-title">
+                <i class="fa-solid fa-file-export" style="color: var(--color-primary);"></i>
+                <span>ออกรายงานและพิมพ์ (Print / PDF)</span>
+              </div>
+            </div>
+            
+            <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:center; margin-bottom: 1.5rem;">
+              <div class="form-group" style="width: 170px;">
+                <label>เลือกปีพิมพ์รายงาน</label>
+                <select id="report-year-select" class="form-control"></select>
+              </div>
+              <div class="form-group" style="width: 210px;">
+                <label>ประเภทรายงาน</label>
+                <div style="display:flex; gap:10px; align-items:center; height: 100%;">
+                  <label style="font-weight:normal; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="report_type" value="annual" checked onchange="toggleReportMonthSelect()"> รายปี
+                  </label>
+                  <label style="font-weight:normal; display:flex; align-items:center; gap:5px;">
+                    <input type="radio" name="report_type" value="monthly" onchange="toggleReportMonthSelect()"> รายเดือน
+                  </label>
+                </div>
+              </div>
+              <div class="form-group" id="report-month-group" style="width: 170px; display:none;">
+                <label>เลือกเดือน</label>
+                <select id="report-month-select" class="form-control"></select>
+              </div>
+              <div style="display:flex; gap:10px; align-self:flex-end; flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="generateAndPrintReport()">
+                  <i class="fa-solid fa-print"></i> พิมพ์ / บันทึก PDF
+                </button>
+                <button class="btn btn-success" onclick="exportToExcel()">
+                  <i class="fa-solid fa-file-excel"></i> Export Excel
+                </button>
+                <button class="btn btn-secondary" onclick="generateChartsReport('usage')" style="background: linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; border:none;">
+                  <i class="fa-solid fa-chart-bar"></i> รายงานกราฟ (ปริมาณ)
+                </button>
+                <button class="btn btn-secondary" onclick="generateChartsReport('cost')" style="background: linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none;">
+                  <i class="fa-solid fa-chart-line"></i> รายงานกราฟ (จำนวนเงิน)
+                </button>
+              </div>
+
+            </div>
+            
+            <div style="border:1px solid #cbd5e1; padding: 1rem; border-radius:8px; background:#f8fafc;">
+              <h4 style="margin-bottom:10px; color:var(--text-secondary);">ตัวอย่างข้อมูล (Preview)</h4>
+              <div id="report-preview-area" class="table-responsive" style="background:#fff; border:1px solid #e2e8f0; border-radius:4px; padding:10px; min-height:150px;">
+                <!-- Preview tables go here -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MANUAL VIEW (คู่มือการใช้งานระบบ) -->
+        <section id="manual-view" class="view-section">
+          <!-- Manual Header Banner -->
+          <div class="manual-hero-card">
+            <div class="manual-hero-content">
+              <div class="manual-hero-badge">
+                <i class="fa-solid fa-book-bookmark"></i> คู่มือผู้ใช้งานระบบ (User Manual)
+              </div>
+              <h2 class="manual-hero-title">คู่มือการใช้งานระบบบริหารจัดการพลังงาน</h2>
+              <p class="manual-hero-desc">
+                ระบบจัดการและวิเคราะห์พลังงาน 4 ประเภท (น้ำบาดาล, ไฟฟ้า, น้ำมันดีเซล, แก๊ส LPG) 
+                พร้อมระบบบันทึกมิเตอร์ย่อย คำนวณต้นทุนต่อหน่วย/ต่อตัว และระบบความปลอดภัย Audit Trail ตามมาตรฐานสากล
+              </p>
+              
+              <!-- Quick Jump Anchor Pills -->
+              <div class="manual-quick-nav">
+                <a href="#manual-sec-roles" class="manual-nav-pill"><i class="fa-solid fa-user-shield"></i> สิทธิ์และบทบาท</a>
+                <a href="#manual-sec-dashboard" class="manual-nav-pill"><i class="fa-solid fa-chart-pie"></i> แดชบอร์ด & วิเคราะห์</a>
+                <a href="#manual-sec-entry" class="manual-nav-pill"><i class="fa-solid fa-pen-to-square"></i> การบันทึก & ล็อกสีเทา</a>
+                <a href="#manual-sec-audit" class="manual-nav-pill"><i class="fa-solid fa-clipboard-check"></i> ประวัติ & Audit Trail</a>
+                <a href="#manual-sec-excel" class="manual-nav-pill"><i class="fa-solid fa-file-excel"></i> ตาราง Excel & Export</a>
+                <a href="#manual-sec-faq" class="manual-nav-pill"><i class="fa-solid fa-circle-question"></i> คำถามที่พบบ่อย (FAQ)</a>
+              </div>
+            </div>
+            <div class="manual-hero-icon">
+              <i class="fa-solid fa-book-open-reader"></i>
+            </div>
+          </div>
+
+          <!-- Section 1: สิทธิ์และบทบาทการใช้งาน -->
+          <div id="manual-sec-roles" class="manual-section-card">
+            <div class="manual-section-header">
+              <div class="manual-section-icon" style="background: rgba(79, 70, 229, 0.1); color: #4f46e5;">
+                <i class="fa-solid fa-user-shield"></i>
+              </div>
+              <div>
+                <h3 class="manual-section-title">1. สิทธิ์และบทบาทการใช้งาน (Roles & Permissions)</h3>
+                <p class="manual-section-subtitle">ระบบแบ่งระดับผู้ใช้งานออกเป็น 2 ระดับ เพื่อความปลอดภัยและความถูกต้องของข้อมูล</p>
+              </div>
+            </div>
+
+            <div class="manual-roles-grid">
+              <!-- Guest Role -->
+              <div class="manual-role-card role-guest">
+                <div class="manual-role-header">
+                  <div class="role-badge guest-badge"><i class="fa-solid fa-eye"></i> ผู้ใช้งานทั่วไป (Guest / Viewer)</div>
+                  <span class="role-status-badge">ไม่ต้องเข้าสู่ระบบ</span>
+                </div>
+                <ul class="manual-check-list">
+                  <li><i class="fa-solid fa-check text-success"></i> ดูแดชบอร์ดสรุปภาพรวมและวิเคราะห์ข้อมูลทุกมุมมอง</li>
+                  <li><i class="fa-solid fa-check text-success"></i> วิเคราะห์กราฟเปรียบเทียบ 4 พลังงาน (ปริมาณ และ ค่าใช้จ่าย)</li>
+                  <li><i class="fa-solid fa-check text-success"></i> วิเคราะห์ราคาพลังงานต่อหน่วย (Unit Rate) และค่าใช้จ่ายเฉลี่ยต่อตัว</li>
+                  <li><i class="fa-solid fa-check text-success"></i> เข้าดูตารางสรุปรูปแบบสเปรดชีต Excel ตลอดทั้งปี</li>
+                  <li><i class="fa-solid fa-check text-success"></i> ส่งออกรายงาน Excel (.xlsx), PDF และรายงานกราฟ</li>
+                  <li class="disabled-perm"><i class="fa-solid fa-xmark text-danger"></i> ไม่สามารถบันทึกหรือแก้ไขข้อมูลตัวเลขได้</li>
+                  <li class="disabled-perm"><i class="fa-solid fa-xmark text-danger"></i> ไม่สามารถเข้าถึงบันทึกประวัติการแก้ไข (Audit Trail)</li>
+                </ul>
+              </div>
+
+              <!-- Admin Role -->
+              <div class="manual-role-card role-admin">
+                <div class="manual-role-header">
+                  <div class="role-badge admin-badge"><i class="fa-solid fa-user-gear"></i> ผู้ดูแลข้อมูล (QA / EMR Admin)</div>
+                  <span class="role-status-badge" style="background:#e0e7ff; color:#4338ca;">สิทธิ์ระดับผู้ดูแล</span>
+                </div>
+                <ul class="manual-check-list">
+                  <li><i class="fa-solid fa-check text-success"></i> ใช้งานได้ทุกฟังก์ชันของผู้ใช้งานทั่วไป</li>
+                  <li><i class="fa-solid fa-check text-success"></i> <strong>บันทึกข้อมูลรอบเดือนใหม่</strong> และเพิ่มรอบเดือนในระบบ</li>
+                  <li><i class="fa-solid fa-check text-success"></i> <strong>บันทึกมิเตอร์ย่อย</strong> น้ำบาดาล 7 จุด และไฟฟ้า 7 จุด</li>
+                  <li><i class="fa-solid fa-check text-success"></i> <strong>แก้ไขข้อมูลย้อนหลัง</strong> พร้อมระบุเหตุผลการแก้ไข</li>
+                  <li><i class="fa-solid fa-check text-success"></i> <strong>เข้าถึงระบบ Audit Trail</strong> ตรวจสอบประวัติการเปลี่ยนแปลงย้อนหลัง</li>
+                  <li><i class="fa-solid fa-check text-success"></i> <strong>เปลี่ยนรหัสผ่าน</strong> ของผู้ดูแลระบบได้เองตลอดเวลา</li>
+                </ul>
+                <div class="manual-credential-box">
+                  <div class="cred-title"><i class="fa-solid fa-key"></i> รหัสผ่านเริ่มต้นระบบ (Default Credentials):</div>
+                  <div class="cred-values">
+                    <span>ชื่อผู้ใช้: <code>admin</code></span>
+                    <span>รหัสผ่าน: <code>1234</code></span>
+                  </div>
+                  <small style="color:var(--text-muted); display:block; margin-top:4px;">* เมื่อเข้าสู่ระบบแล้ว สามารถกดที่ปุ่มชื่อผู้ใช้มุมขวาบนเพื่อเปลี่ยนรหัสผ่านใหม่ได้ทันที</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: แดชบอร์ด & วิเคราะห์ข้อมูล -->
+          <div id="manual-sec-dashboard" class="manual-section-card">
+            <div class="manual-section-header">
+              <div class="manual-section-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+              <div>
+                <h3 class="manual-section-title">2. แดชบอร์ดวิเคราะห์และเปรียบเทียบเชิงบริหาร (Dashboard & Analytics)</h3>
+                <p class="manual-section-subtitle">ศูนย์รวมข้อมูลเชิงสถิติ วิเคราะห์แนวโน้ม และประเมินประสิทธิภาพการใช้พลังงาน</p>
+              </div>
+            </div>
+
+            <div class="manual-steps-grid">
+              <div class="manual-step-item">
+                <div class="step-num">2.1</div>
+                <h4>สวิตช์เลือกปีงบประมาณ & ปีเปรียบเทียบ (YoY)</h4>
+                <p>
+                  ที่มุมขวาบนของแดชบอร์ด สามารถเลือก <strong>ปีงบประมาณหลัก</strong> (เช่น 2568, 2569) 
+                  และ <strong>ปีเปรียบเทียบ</strong> เพื่อดูกราฟและตัวเลขผลต่างเทียบกันแบบเดือนต่อเดือน (Year-over-Year)
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num">2.2</div>
+                <h4>การ์ดสรุปตัวชี้วัดหลัก 4 มิติ (Executive KPI Cards)</h4>
+                <p>
+                  แสดงผลลัพธ์ทันที ประกอบด้วย:
+                  <br>• <strong>ยอดค่าใช้จ่ายพลังงานรวม</strong> (บาท)
+                  <br>• <strong>จำนวนผลผลิตสุกรทั้งหมด</strong> (ตัว)
+                  <br>• <strong>ต้นทุนพลังงานเฉลี่ย/ตัว</strong> (บาท/ตัว)
+                  <br>• <strong>ผลต่างเทียบปีก่อนหน้า</strong> (+/- % YoY) เพื่อทราบสถานะต้นทุนทันที
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num">2.3</div>
+                <h4>กราฟสัดส่วนต้นทุนพลังงาน (Donut Chart)</h4>
+                <p>
+                  แสดงเปอร์เซ็นต์สัดส่วนค่าใช้จ่ายแยก 4 ชนิดพลังงาน 
+                  (น้ำบาดาลสีฟ้า, ไฟฟ้าสีส้ม, น้ำมันดีเซลสีชมพู, แก๊ส LPG สีเขียว) 
+                  ช่วยชี้จุดที่ต้องมุ่งเน้นการประหยัดพลังงาน
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num">2.4</div>
+                <h4>แนวโน้ม 4 พลังงาน: ปริมาณ & ค่าใช้จ่าย</h4>
+                <p>
+                  เปรียบเทียบแนวโน้มรายเดือนตลอดทั้งปี ครบทั้ง 4 ประเภทพลังงาน 
+                  โดยสามารถสลับดูได้ทั้ง <strong>ปริมาณการใช้ (Usage)</strong> 
+                  และ <strong>จำนวนเงินค่าใช้จ่าย (Cost)</strong>
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num">2.5</div>
+                <h4>วิเคราะห์ราคาเฉลี่ยต่อหน่วย (Unit Rate)</h4>
+                <p>
+                  เมนู <strong>"ราคาต่อหน่วย (Unit Rate)"</strong> วิเคราะห์อัตราค่าบริการเฉลี่ยที่เกิดขึ้นจริง:
+                  <br>• น้ำบาดาล (บาท/ลบ.ม.)
+                  <br>• ไฟฟ้า (บาท/kWh)
+                  <br>• น้ำมันดีเซล (บาท/ลิตร)
+                  <br>• แก๊ส LPG (บาท/กก.)
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num">2.6</div>
+                <h4>วิเคราะห์ค่าใช้จ่ายเฉลี่ยต่อตัว (Cost / Head)</h4>
+                <p>
+                  กราฟแสดงต้นทุนแต่ละพลังงานต่อสุกร 1 ตัว (บาท/ตัว) 
+                  พร้อม <strong>ตัวเลขจำนวนผลิตสุกรรายเดือนระบุชัดเจนใต้ชื่อเดือน</strong>
+                  ช่วยให้เห็นความสัมพันธ์ระหว่างยอดผลผลิตและต้นทุนพลังงานต่อตัวอย่างแท้จริง
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: การบันทึกข้อมูล & ระบบล็อกสีเทา -->
+          <div id="manual-sec-entry" class="manual-section-card">
+            <div class="manual-section-header">
+              <div class="manual-section-icon" style="background: rgba(217, 119, 6, 0.1); color: #d97706;">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </div>
+              <div>
+                <h3 class="manual-section-title">3. ขั้นตอนการบันทึกข้อมูล & ระบบล็อกสีเทา (Data Entry & Auto-Lock)</h3>
+                <p class="manual-section-subtitle">ระบบบันทึกมิเตอร์ย่อยอัตโนมัติ การค้างข้อมูล Real-time และการล็อกป้องกันการบันทึกทับ</p>
+              </div>
+            </div>
+
+            <!-- Workflow Flowchart -->
+            <div class="manual-flow-container">
+              <div class="manual-flow-step">
+                <div class="flow-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="flow-text">1. เลือกรอบเดือน/ปี</div>
+              </div>
+              <div class="manual-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+              <div class="manual-flow-step">
+                <div class="flow-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                <div class="flow-text">2. กรอกมิเตอร์น้ำ & ไฟ</div>
+              </div>
+              <div class="manual-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+              <div class="manual-flow-step">
+                <div class="flow-icon"><i class="fa-solid fa-gas-pump"></i></div>
+                <div class="flow-text">3. กรอกน้ำมัน, แก๊ส, ยอดสุกร</div>
+              </div>
+              <div class="manual-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+              <div class="manual-flow-step">
+                <div class="flow-icon"><i class="fa-solid fa-floppy-disk"></i></div>
+                <div class="flow-text">4. กดบันทึกข้อมูล</div>
+              </div>
+              <div class="manual-flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+              <div class="manual-flow-step flow-lock">
+                <div class="flow-icon"><i class="fa-solid fa-lock"></i></div>
+                <div class="flow-text">5. ข้อมูลล็อกสีเทา</div>
+              </div>
+            </div>
+
+            <div class="manual-steps-detail">
+              <div class="manual-detail-box">
+                <h4><i class="fa-solid fa-1"></i> เลือกรอบเดือนและเพิ่มรอบใหม่</h4>
+                <p>
+                  เลือกปีและเดือนที่ต้องการบันทึก หากต้องการเปิดบันทึกเดือนใหม่ที่ยังไม่เคยมี ให้คลิกปุ่ม 
+                  <span class="badge-btn-sample" style="background:#4f46e5;"><i class="fa-solid fa-plus"></i> เพิ่มรอบบันทึกเดือนใหม่</span> 
+                  ระบบจะเตรียมฟอร์มพร้อมดึงเลขอ่านมิเตอร์ล่าสุดมาตั้งเป็นเลขเริ่มต้นให้อัตโนมัติ
+                </p>
+              </div>
+
+              <div class="manual-detail-box">
+                <h4><i class="fa-solid fa-2"></i> บันทึกตารางมิเตอร์ย่อย (น้ำบาดาล 7 จุด & ไฟฟ้า 7 จุด)</h4>
+                <p>
+                  ระบบมีตารางบันทึกมิเตอร์ย่อยแยกจุดใช้งานจริง (เช่น โรงเรือนสุกรขุน, โรงคลอด, อาคารสำนักงาน, โรงชำแหละ) 
+                  เพียงกรอก <strong>"เลขอ่านปัจจุบัน"</strong> ระบบจะคำนวณ <strong>"ผลต่าง (ปริมาณการใช้)"</strong> และรวมยอดปริมาณทั้งหมดให้อัตโนมัติ 
+                  จากนั้นกรอกยอดเงินตามใบแจ้งหนี้เพื่อคำนวณอัตราเฉลี่ย
+                </p>
+              </div>
+
+              <div class="manual-detail-box">
+                <h4><i class="fa-solid fa-3"></i> ระบบจำและค้างข้อมูล Real-time (Auto-Save Persistence)</h4>
+                <p>
+                  ข้อมูลทุกช่องที่คุณพิมพ์จะถูกจดจำไว้ตลอดเวลาในระบบแคชของเครื่อง แม้ว่าคุณจะสลับหน้าจอไปดูแดชบอร์ด 
+                  หรือเผลอปิดแท็บเบราว์เซอร์ เมื่อกลับมาที่หน้านี้ ข้อมูลที่กรอกค้างไว้จะไม่สูญหาย
+                </p>
+              </div>
+
+              <div class="manual-detail-box lock-feature-box">
+                <div class="lock-feature-header">
+                  <span class="lock-status-badge"><i class="fa-solid fa-lock"></i> ระบบล็อกสีเทา (Gray Auto-Lock Mechanism)</span>
+                </div>
+                <h4 style="margin-top:0.5rem; color:#dc2626;"><i class="fa-solid fa-shield-halved"></i> การล็อกข้อมูลหลังบันทึกเสร็จ</h4>
+                <p>
+                  เมื่อกดปุ่ม <strong>"บันทึกข้อมูล"</strong> สำเร็จ:
+                </p>
+                <ul class="manual-inner-list">
+                  <li><strong>ช่องกรอกทั้งหมดจะเปลี่ยนเป็นสีเทา (Disabled)</strong> ไม่สามารถคลิกแก้ไขหรือพิมพ์ข้อมูลได้ทันที</li>
+                  <li>จะมีแถบสีแดงแจ้งเตือนด้านบนว่า <em>"🔒 ข้อมูลรอบเดือนนี้ถูกบันทึกและล็อกการแก้ไขเรียบร้อยแล้ว"</em></li>
+                  <li>ป้องกันปัญหาเจ้าหน้าที่เผลอกดคีย์บอร์ดแก้ไข หรือบันทึกทับข้อมูลที่ถูกต้องแล้ว</li>
+                </ul>
+
+                <h4 style="margin-top:1rem; color:#d97706;"><i class="fa-solid fa-pen-nib"></i> วิธีการปลดล็อกเพื่อแก้ไขข้อมูล</h4>
+                <p>
+                  หากต้องการแก้ไขตัวเลขในเดือนที่บันทึกแล้ว:
+                </p>
+                <ol class="manual-inner-list" type="1">
+                  <li>คลิกปุ่มสีส้ม <strong>"✏️ แก้ไขข้อมูล"</strong> ที่แถบด้านบนของฟอร์ม</li>
+                  <li>ระบบจะแสดงกล่องข้อความให้ <strong>ระบุเหตุผลการแก้ไข</strong> (เช่น "ปรับยอดมิเตอร์น้ำตามบิลจริงรอบบ่าย")</li>
+                  <li>กด <strong>"ปลดล็อกเพื่อแก้ไข"</strong> ช่องกรอกจะกลับมาเป็นสีขาวให้แก้ไขตัวเลขได้ตามต้องการ</li>
+                  <li>เมื่อแก้ไขเสร็จแล้ว ให้กดปุ่ม <strong>"บันทึกการแก้ไข"</strong> ระบบจะบันทึกประวัติก่อน-หลัง พร้อมเหตุผลลงในระบบ Audit Trail ทันที</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: ประวัติการบันทึก & Audit Trail -->
+          <div id="manual-sec-audit" class="manual-section-card">
+            <div class="manual-section-header">
+              <div class="manual-section-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                <i class="fa-solid fa-clipboard-check"></i>
+              </div>
+              <div>
+                <h3 class="manual-section-title">4. ประวัติการบันทึก & บันทึกการแก้ไข (History & Audit Trail Log)</h3>
+                <p class="manual-section-subtitle">ความโปร่งใสและตรวจสอบย้อนหลังได้ตามมาตรฐานระบบบริหารคุณภาพ QA/EMR</p>
+              </div>
+            </div>
+
+            <div class="manual-grid-2col">
+              <div class="manual-card-bordered">
+                <div class="card-bordered-title">
+                  <i class="fa-solid fa-clock-rotate-left" style="color:var(--color-primary);"></i> ประวัติการบันทึกข้อมูลย้อนหลัง (History View)
+                </div>
+                <p style="font-size:0.95rem; color:var(--text-secondary); margin-bottom:1rem;">
+                  แสดงตารางบันทึกสรุปทั้ง 12 เดือนของแต่ละปี พร้อมสรุปปริมาณการใช้ ค่าใช้จ่าย ยอดผลิตสุกร และค่าใช้จ่ายต่อตัว
+                </p>
+                <ul class="manual-check-list">
+                  <li><strong>ตรวจสอบสถานะ:</strong> ดูได้อย่างรวดเร็วว่าเดือนใดบันทึกข้อมูลแล้ว และเดือนใดยังไม่ได้บันทึก</li>
+                  <li><strong>ปุ่มแก้ไข (Edit):</strong> ลิงก์ตรงเข้าสู่หน้าแก้ไขข้อมูลของเดือนนั้นทันที</li>
+                  <li><strong>ปุ่มลบ (Delete):</strong> ลบข้อมูลเดือนที่บันทึกผิดพลาด (ต้องยืนยันการลบก่อนเสมอ)</li>
+                </ul>
+              </div>
+
+              <div class="manual-card-bordered">
+                <div class="card-bordered-title">
+                  <i class="fa-solid fa-shield-halved" style="color:#d97706;"></i> ประวัติการแก้ไขข้อมูล (Audit Trail Log)
+                </div>
+                <p style="font-size:0.95rem; color:var(--text-secondary); margin-bottom:1rem;">
+                  เก็บบันทึกประวัติทุกครั้งที่มีการกดแก้ไขข้อมูลในระบบ เพื่อให้ผู้บริหารและฝ่ายตรวจสอบสามารถสอบทานได้
+                </p>
+                <div class="audit-log-sample">
+                  <div class="audit-sample-header">
+                    <span class="badge-user"><i class="fa-solid fa-user-check"></i> admin (QA / EMR)</span>
+                    <span class="badge-time"><i class="fa-solid fa-clock"></i> 24 ก.ย. 2569 10:30 น.</span>
+                  </div>
+                  <div class="audit-sample-body">
+                    <div><strong>รายการที่แก้ไข:</strong> ค่าน้ำบาดาล (ยอดเงิน) ประจำเดือน กุมภาพันธ์ 2569</div>
+                    <div style="margin-top:4px;"><strong>การเปลี่ยนแปลง:</strong> <span class="old-val">12,500 บาท</span> ➔ <span class="new-val">13,200 บาท</span></div>
+                    <div style="margin-top:4px;"><strong>เหตุผล:</strong> ปรับปรุงยอดตามใบเสร็จรับเงินฉบับจริง</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 5: ตารางสรุป Excel & การส่งออก -->
+          <div id="manual-sec-excel" class="manual-section-card">
+            <div class="manual-section-header">
+              <div class="manual-section-icon" style="background: rgba(5, 150, 105, 0.1); color: #059669;">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              <div>
+                <h3 class="manual-section-title">5. ตารางสรุปรูปแบบ Excel และการส่งออกรายงาน (Spreadsheet & Export)</h3>
+                <p class="manual-section-subtitle">ฟังก์ชันอำนวยความสะดวกในการจัดทำรายงานประจำเดือนและรายงานผู้บริหาร</p>
+              </div>
+            </div>
+
+            <div class="manual-steps-grid">
+              <div class="manual-step-item">
+                <div class="step-num"><i class="fa-solid fa-table-cells"></i></div>
+                <h4>ตารางสเปรดชีตในระบบ (Sheet View)</h4>
+                <p>
+                  จำลองรูปแบบสเปรดชีต Excel เต็มตาราง แสดงข้อมูล 12 เดือนแบบแนวนอน พร้อมระบบ 
+                  <strong>ตรึงหัวตาราง (Sticky Header)</strong> และ <strong>ตรึงคอลัมน์แรก (Sticky First Column)</strong> 
+                  ทำให้เลื่อนดูตัวเลขได้สะดวกโดยไม่หลุดจากสายตา
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num"><i class="fa-solid fa-file-arrow-down"></i></div>
+                <h4>ส่งออกไฟล์ Excel ตกแต่งสวยงาม (.xlsx)</h4>
+                <p>
+                  ส่งออกไฟล์ Excel คุณภาพสูง:
+                  <br>• ใช้ฟอนต์ <strong>Cordia New</strong> สวยงาม มาตรฐานงานเอกสารไทย
+                  <br>• จัดโทนสีหัวตารางและแถวรวมแยกตามประเภทพลังงานชัดเจน
+                  <br>• ปรับความกว้างคอลัมน์อัตโนมัติ ไม่ตกหล่นหรือล้นช่อง
+                  <br>• จัดวางตัวเลขชิดขวาและคั่นหลักพันครบถ้วน
+                </p>
+              </div>
+
+              <div class="manual-step-item">
+                <div class="step-num"><i class="fa-solid fa-file-pdf"></i></div>
+                <h4>ส่งออกรายงาน PDF & รายงานกราฟ</h4>
+                <p>
+                  ในเมนู <strong>"รายงาน & Export"</strong> สามารถคลิก:
+                  <br>• <strong>รายงาน PDF:</strong> จัดหน้ารายงานพร้อมพิมพ์ (Print-Ready)
+                  <br>• <strong>รายงานกราฟ (ปริมาณ & จำนวนเงิน):</strong> สรุปแผนภูมิแนวโน้มสำหรับนำเข้าเอกสารนำเสนอผู้บริหาร
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 6: คำถามที่พบบ่อย (FAQ) -->
+          <div id="manual-sec-faq" class="manual-section-card">
+            <div class="manual-section-header">
+              <div class="manual-section-icon" style="background: rgba(147, 51, 234, 0.1); color: #9333ea;">
+                <i class="fa-solid fa-circle-question"></i>
+              </div>
+              <div>
+                <h3 class="manual-section-title">6. คำถามที่พบบ่อยและเคล็ดลับการใช้งาน (FAQ & Tips)</h3>
+                <p class="manual-section-subtitle">รวบรวมข้อสงสัยและวิธีการแก้ปัญหาเบื้องต้นในการใช้งานระบบ</p>
+              </div>
+            </div>
+
+            <div class="manual-faq-accordion">
+              <!-- Q1 -->
+              <details class="faq-item" open>
+                <summary class="faq-question">
+                  <span><i class="fa-solid fa-circle-question text-primary"></i> ถ้าเผลอปิดแท็บหรือไฟดับขณะกำลังกรอกข้อมูล ข้อมูลจะหายหรือไม่?</span>
+                  <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </summary>
+                <div class="faq-answer">
+                  <strong>ไม่หายอย่างแน่นอนครับ:</strong> ระบบมีฟังก์ชัน Real-time Auto-Save ที่บันทึกข้อมูลทุกตัวอักษรลงในหน่วยความจำของเบราว์เซอร์ทันทีที่พิมพ์ เมื่อเปิดระบบกลับมาและเลือกเดือนเดิม ข้อมูลที่กรอกค้างไว้จะแสดงกลับคืนมาครบถ้วน
+                </div>
+              </details>
+
+              <!-- Q2 -->
+              <details class="faq-item">
+                <summary class="faq-question">
+                  <span><i class="fa-solid fa-circle-question text-primary"></i> ทำไมช่องกรอกข้อมูลถึงเป็นสีเทา พิมพ์ตัวเลขไม่ได้?</span>
+                  <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </summary>
+                <div class="faq-answer">
+                  เนื่องจากข้อมูลในรอบเดือนนั้นได้ถูกกดบันทึกสำเร็จไปแล้ว ระบบจึงทำการ <strong>"ล็อกสีเทา"</strong> เพื่อป้องกันการเผลอพิมพ์ทับข้อมูลที่ถูกต้อง หากต้องการแก้ไข ให้กดปุ่มสีส้ม <strong>"✏️ แก้ไขข้อมูล"</strong> ที่แถบด้านบน ระบุเหตุผลการแก้ไข จากนั้นระบบจะปลดล็อกให้พิมพ์ได้ตามปกติ
+                </div>
+              </details>
+
+              <!-- Q3 -->
+              <details class="faq-item">
+                <summary class="faq-question">
+                  <span><i class="fa-solid fa-circle-question text-primary"></i> สามารถเปิดใช้งานระบบบนสมาร์ทโฟนหรือแท็บเล็ตได้หรือไม่?</span>
+                  <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </summary>
+                <div class="faq-answer">
+                  <strong>รองรับเต็มรูปแบบครับ:</strong> ระบบออกแบบเป็น Responsive Web Design ปรับขนาดพอดีกับหน้าจอทุกขนาด ทั้งคอมพิวเตอร์ตั้งโต๊ะ แล็ปท็อป และมือถือ โดยบนมือถือจะมีปุ่มเมนู 3 ขีด (Hamburger) สำหรับเปิด-ปิดแถบเมนูด้านข้างได้อย่างสะดวก
+                </div>
+              </details>
+
+              <!-- Q4 -->
+              <details class="faq-item">
+                <summary class="faq-question">
+                  <span><i class="fa-solid fa-circle-question text-primary"></i> สลับโหมดมืด (Dark Mode) เพื่อความสบายตาได้อย่างไร?</span>
+                  <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </summary>
+                <div class="faq-answer">
+                  คลิกที่ปุ่ม <strong>"Dark Mode"</strong> ที่ด้านล่างสุดของแถบเมนูด้านซ้าย (Sidebar Footer) ระบบจะสลับธีมสีเป็นสีเข้มที่สบายตา และคงค่านี้ไว้ตลอดการใช้งาน
+                </div>
+              </details>
+
+              <!-- Q5 -->
+              <details class="faq-item">
+                <summary class="faq-question">
+                  <span><i class="fa-solid fa-circle-question text-primary"></i> ต้องการเปลี่ยนรหัสผ่านผู้ดูแลระบบ (Admin) ต้องทำอย่างไร?</span>
+                  <i class="fa-solid fa-chevron-down faq-icon"></i>
+                </summary>
+                <div class="faq-answer">
+                  หลังจากเข้าสู่ระบบด้วยชื่อ <code>admin</code> แล้ว ให้คลิกที่ชื่อผู้ใช้หรือปุ่มสถานะมุมขวาบนของหน้าจอ แล้วเลือก <strong>"จัดการรหัสผ่าน"</strong> จากนั้นกรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่ที่ต้องการ แล้วกดยืนยันบันทึก
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+  </div>
+
+  <!-- AUTHENTICATION LOGIN MODAL -->
+  <div id="login-modal" class="modal-overlay" style="display:none;">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="brand-icon">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h3>เข้าสู่ระบบผู้ดูแลข้อมูล (QA / EMR)</h3>
+        <p>ปลดล็อกสิทธิ์บันทึก แก้ไขข้อมูล และเข้าถึงประวัติการแก้ไข</p>
+      </div>
+
+      <form id="login-form" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label><i class="fa-solid fa-user"></i> ชื่อผู้ใช้งาน (Username)</label>
+          <input type="text" id="login-username" class="form-control" placeholder="admin" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label><i class="fa-solid fa-key"></i> รหัสผ่าน (Password)</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:8px; font-size:0.875rem; color:#64748b; margin-bottom:1.5rem;">
+          <i class="fa-solid fa-circle-info" style="color:var(--color-primary);"></i> โปรดติดต่อผู้ดูแลระบบเพื่อขอรหัสผ่าน
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">ยกเลิก</button>
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN PASSWORD CHANGE MODAL -->
+  <div id="change-password-modal" class="modal-overlay" style="display:none;">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="brand-icon" style="background:rgba(217,119,6,0.15); color:#d97706;">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <h3>จัดการรหัสผ่านผู้ดูแลระบบ</h3>
+        <p>เปลี่ยนชื่อผู้ใช้งานและรหัสผ่านสำหรับเข้าสู่ระบบ</p>
+      </div>
+
+      <form id="change-password-form" onsubmit="handleChangePasswordSubmit(event)">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label><i class="fa-solid fa-user-gear"></i> ชื่อผู้ใช้งาน (Username)</label>
+          <input type="text" id="change-username-input" class="form-control" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label><i class="fa-solid fa-lock"></i> รหัสผ่านปัจจุบัน (Current Password)</label>
+          <input type="password" id="change-old-password-input" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label><i class="fa-solid fa-key"></i> รหัสผ่านใหม่ (New Password)</label>
+          <input type="password" id="change-new-password-input" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label><i class="fa-solid fa-check-double"></i> ยืนยันรหัสผ่านใหม่ (Confirm Password)</label>
+          <input type="password" id="change-confirm-password-input" class="form-control" placeholder="••••••••" required>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeChangePasswordModal()">ยกเลิก</button>
+          <button type="submit" class="btn btn-warning"><i class="fa-solid fa-floppy-disk"></i> บันทึกรหัสผ่านใหม่</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="js/initialData.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
