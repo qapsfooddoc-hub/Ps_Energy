@@ -52,6 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAuthUI();
     switchView("dashboard-view");
     refreshAllViews();
+
+    // Initialize Google Sheets Sync if configured (Stale-While-Revalidate in background)
+    if (typeof sheetsService !== 'undefined') {
+        sheetsService.updateStatusBadge();
+        if (sheetsService.isConfigured()) {
+            sheetsService.syncFromSheets(false);
+        }
+    }
 });
 
 function loadStateFromStorage() {
@@ -1335,6 +1343,9 @@ function saveResource(resourceType, skipRefresh = false) {
         appState.editingMonth = null;
         appState.previousSnapshot = null;
         saveStateToStorage();
+        if (typeof sheetsService !== 'undefined' && sheetsService.isConfigured()) {
+            sheetsService.saveMonthToSheets(year, month);
+        }
         cancelEditMode();
         refreshAllViews();
     }
@@ -1373,6 +1384,9 @@ function saveProdVol() {
     appState.previousSnapshot = null;
 
     saveStateToStorage();
+    if (typeof sheetsService !== 'undefined' && sheetsService.isConfigured()) {
+        sheetsService.saveMonthToSheets(year, month);
+    }
     cancelEditMode();
     refreshAllViews();
     showToast(`✅ บันทึกยอดการผลิต ${prodVol.toLocaleString('th-TH')} ตัว เดือน ${month} ${year} เรียบร้อยแล้ว (ล็อกเป็นสีเทา)`);
@@ -1457,6 +1471,9 @@ function saveEntryForm() {
     appState.previousSnapshot = null;
 
     saveStateToStorage();
+    if (typeof sheetsService !== 'undefined' && sheetsService.isConfigured()) {
+        sheetsService.saveMonthToSheets(year, month);
+    }
     cancelEditMode();
     refreshAllViews();
 }
