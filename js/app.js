@@ -94,9 +94,9 @@ function loadStateFromStorage() {
         saveStateToStorage();
     }
 
-    // Ensure 2569 July and August are populated from latest dataset if empty or missing
+    // Ensure 2569 July, August, and September are populated from latest dataset if empty or missing
     if (appState.multiYearData && appState.multiYearData["2569"]) {
-        ["กรกฎาคม", "สิงหาคม"].forEach(m => {
+        ["กรกฎาคม", "สิงหาคม", "กันยายน"].forEach(m => {
             const cur = appState.multiYearData["2569"][m];
             const def = MULTI_YEAR_ENERGY_DATA["2569"] && MULTI_YEAR_ENERGY_DATA["2569"][m];
             if (def && (!cur || cur.production === 0 || cur.items.every(it => it.cost === 0))) {

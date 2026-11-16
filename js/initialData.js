@@ -6554,47 +6554,47 @@ var MULTI_YEAR_ENERGY_DATA = {
     "กันยายน": {
       "month": "กันยายน",
       "year": 2569,
-      "production": 0,
+      "production": 32500,
       "items": [
         {
           "id": 1,
           "name": "น้ำ",
-          "usage": 0,
-          "unit": "",
-          "cost": 0,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "usage": 51418,
+          "unit": "ลบ.ม.",
+          "cost": 879991.8396,
+          "production": 32500,
+          "usagePerProd": 1.5820923076923077,
+          "costPerProd": 27.07667198769231
         },
         {
           "id": 2,
           "name": "ไฟฟ้า",
-          "usage": 0,
-          "unit": "",
-          "cost": 0,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "usage": 3269000,
+          "unit": "kWh",
+          "cost": 13171535.0274,
+          "production": 32500,
+          "usagePerProd": 100.58461538461539,
+          "costPerProd": 405.27800084307694
         },
         {
           "id": 3,
           "name": "น้ำมันเชื้อเพลิง",
-          "usage": 0,
-          "unit": "",
-          "cost": 0,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "usage": 27911,
+          "unit": "ลิตร",
+          "cost": 1011494.64,
+          "production": 32500,
+          "usagePerProd": 0.8588,
+          "costPerProd": 31.122912
         },
         {
           "id": 4,
           "name": "แก๊ส (LPG)",
-          "usage": 0,
-          "unit": "",
-          "cost": 0,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "usage": 47638,
+          "unit": "กิโลกรัม",
+          "cost": 1078629.12,
+          "production": 32500,
+          "usagePerProd": 1.4657846153846155,
+          "costPerProd": 33.188588307692314
         }
       ],
       "totalCost": 0,
@@ -8629,8 +8629,8 @@ var INITIAL_WATER_METERS_2569 = {
       "meterCode": "58470568 575-010 PS",
       "houseNo": "949",
       "location": "บ้านกู๋พจน์ คลัง 1,2",
-      "usage": 0,
-      "cost": 0
+      "usage": 982,
+      "cost": 16718.8784
     },
     {
       "id": 2,
@@ -8645,8 +8645,8 @@ var INITIAL_WATER_METERS_2569 = {
       "meterCode": "74738048 732-905 PS",
       "houseNo": "949/2",
       "location": "คลัง 3 / คลัง 4",
-      "usage": 0,
-      "cost": 0
+      "usage": 8150,
+      "cost": 139342.248
     },
     {
       "id": 4,
@@ -8654,7 +8654,7 @@ var INITIAL_WATER_METERS_2569 = {
       "houseNo": "949/1",
       "location": "โรงฆ่าเก่า",
       "usage": 0,
-      "cost": 0
+      "cost": 673.03
     },
     {
       "id": 5,
@@ -8669,16 +8669,16 @@ var INITIAL_WATER_METERS_2569 = {
       "meterCode": "74850389 575-045 / 56188667 575-010 PS",
       "houseNo": "949/4-949/7",
       "location": "เฟส 5 / เฟส 6",
-      "usage": 0,
-      "cost": 0
+      "usage": 28501,
+      "cost": 487685.4132
     },
     {
       "id": 7,
       "meterCode": "74074261 575-040 / 58456013 575-020 PS",
       "houseNo": "999",
       "location": "โรงกุญเชียงตัวใหญ่ / ตัวเล็ก",
-      "usage": 0,
-      "cost": 0
+      "usage": 13785,
+      "cost": 235572.27
     }
   ],
   "ตุลาคม": [
@@ -9328,56 +9328,56 @@ var INITIAL_ELEC_METERS_2569 = {
       "meterCode": "55161825",
       "houseNo": "949/1",
       "location": "หน้าร้านเก่า",
-      "usage": 0,
-      "cost": 0
+      "usage": 189000,
+      "cost": 816197.8939
     },
     {
       "id": 2,
       "meterCode": "55048446",
       "houseNo": "999",
       "location": "คลังสินค้า 1",
-      "usage": 0,
-      "cost": 0
+      "usage": 3000,
+      "cost": 13401.6858
     },
     {
       "id": 3,
       "meterCode": "55117509",
       "houseNo": "949",
       "location": "บ้านกู๋พจน์",
-      "usage": 0,
-      "cost": 0
+      "usage": 312000,
+      "cost": 1238348.1397
     },
     {
       "id": 4,
       "meterCode": "55213319",
       "houseNo": "999/2",
       "location": "ออฟฟิสคลัง 3",
-      "usage": 0,
-      "cost": 0
+      "usage": 739000,
+      "cost": 2906411.6606
     },
     {
       "id": 5,
       "meterCode": "95746027",
       "houseNo": "999/2-5",
       "location": "คลังสินค้า 4",
-      "usage": 0,
-      "cost": 0
+      "usage": 554000,
+      "cost": 2274499.5029
     },
     {
       "id": 6,
       "meterCode": "95887241",
       "houseNo": "999/5-949/7",
       "location": "เฟส 5-เฟส 6",
-      "usage": 0,
-      "cost": 0
+      "usage": 1411000,
+      "cost": 5667867.1684
     },
     {
       "id": 7,
       "meterCode": "95354741",
       "houseNo": "999,999/1",
       "location": "P&P",
-      "usage": 0,
-      "cost": 0
+      "usage": 61000,
+      "cost": 254808.9761
     }
   ],
   "ตุลาคม": [

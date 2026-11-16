@@ -14,3 +14,8 @@ desktop.ini
 # Environment / local settings
 .env
 .env.local
+
+# Office temp/lock files
+~$*.xlsx
+~$*.xls
+
