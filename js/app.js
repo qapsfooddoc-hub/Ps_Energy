@@ -94,7 +94,7 @@ function loadStateFromStorage() {
         saveStateToStorage();
     }
 
-    // Ensure 2569 July, August, and September are populated from latest dataset if empty or missing
+    // Ensure 2569 July, August, September, and October are populated from latest dataset if empty or missing
     if (appState.multiYearData && appState.multiYearData["2569"]) {
         ["กรกฎาคม", "สิงหาคม", "กันยายน"].forEach(m => {
             const cur = appState.multiYearData["2569"][m];
@@ -103,6 +103,13 @@ function loadStateFromStorage() {
                 appState.multiYearData["2569"][m] = JSON.parse(JSON.stringify(def));
             }
         });
+
+        // Ensure 2569 October is populated if empty or missing water/electric cost
+        const curOct = appState.multiYearData["2569"]["ตุลาคม"];
+        const defOct = MULTI_YEAR_ENERGY_DATA["2569"] && MULTI_YEAR_ENERGY_DATA["2569"]["ตุลาคม"];
+        if (defOct && (!curOct || curOct.items.every(it => it.cost === 0) || (curOct.items.find(i => i.id === 1)?.cost === 0 && defOct.items.find(i => i.id === 1)?.cost > 0))) {
+            appState.multiYearData["2569"]["ตุลาคม"] = JSON.parse(JSON.stringify(defOct));
+        }
     }
 
     if (savedWater) {

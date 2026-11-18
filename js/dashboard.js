@@ -103,7 +103,7 @@ function renderDashboard(multiYearData, waterMetersData, elecMetersData) {
         if (isRecorded) {
             curMonthlyCosts.push(mTot);
             curMonthlyProds.push(prod);
-            curMonthlyUnitRatios.push(unitRatio);
+            curMonthlyUnitRatios.push(prod > 0 ? unitRatio : null);
 
             curTotalCost += mTot;
             curTotalProd += prod;
@@ -362,15 +362,15 @@ function renderResourceUnitDashboard(multiYearData, curYear, cmpYear, months, ac
         cmpFuelHeadRates.push(cmpFHead);
 
         if (isRecorded) {
-            curWaterUnitRates.push(curWRate);
-            curElecUnitRates.push(curERate);
-            curGasUnitRates.push(curGRate);
-            curFuelUnitRates.push(curFRate);
+            curWaterUnitRates.push(wU > 0 ? curWRate : null);
+            curElecUnitRates.push(eU > 0 ? curERate : null);
+            curGasUnitRates.push(gU > 0 ? curGRate : null);
+            curFuelUnitRates.push(fU > 0 ? curFRate : null);
 
-            curWaterHeadRates.push(curWHead);
-            curElecHeadRates.push(curEHead);
-            curGasHeadRates.push(curGHead);
-            curFuelHeadRates.push(curFHead);
+            curWaterHeadRates.push(curProd > 0 ? curWHead : null);
+            curElecHeadRates.push(curProd > 0 ? curEHead : null);
+            curGasHeadRates.push(curProd > 0 ? curGHead : null);
+            curFuelHeadRates.push(curProd > 0 ? curFHead : null);
 
             sumCurWaterCost += wC; sumCurWaterUsage += wU;
             sumCurElecCost += eC; sumCurElecUsage += eU;
@@ -1012,8 +1012,9 @@ function renderExecutiveInsights(monthlyData, curYear, cmpYear, curTotalCost, cm
     }
 
     let maxCostMonth = recordedMonths.reduce((prev, curr) => (curr.totalCost > prev.totalCost) ? curr : prev, recordedMonths[0]);
-    let maxUnitCostMonth = recordedMonths.reduce((prev, curr) => (curr.unitRatio > prev.unitRatio) ? curr : prev, recordedMonths[0]);
-    let minUnitCostMonth = recordedMonths.reduce((prev, curr) => (curr.unitRatio < prev.unitRatio) ? curr : prev, recordedMonths[0]);
+    const monthsWithProd = recordedMonths.filter(m => m.prod > 0 && m.unitRatio > 0);
+    let maxUnitCostMonth = monthsWithProd.length > 0 ? monthsWithProd.reduce((prev, curr) => (curr.unitRatio > prev.unitRatio) ? curr : prev, monthsWithProd[0]) : recordedMonths[0];
+    let minUnitCostMonth = monthsWithProd.length > 0 ? monthsWithProd.reduce((prev, curr) => (curr.unitRatio < prev.unitRatio) ? curr : prev, monthsWithProd[0]) : recordedMonths[0];
 
     const totalResourceCost = (elecCost + gasCost + fuelCost + waterCost) || 1;
     const elecPct = (elecCost / totalResourceCost * 100).toFixed(1);

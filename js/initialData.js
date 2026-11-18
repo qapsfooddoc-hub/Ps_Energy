@@ -6610,9 +6610,9 @@ var MULTI_YEAR_ENERGY_DATA = {
         {
           "id": 1,
           "name": "น้ำ",
-          "usage": 0,
-          "unit": "",
-          "cost": 0,
+          "usage": 51584,
+          "unit": "ลบ.ม.",
+          "cost": 882826.6548,
           "production": 0,
           "usagePerProd": 0,
           "costPerProd": 0
@@ -6620,9 +6620,9 @@ var MULTI_YEAR_ENERGY_DATA = {
         {
           "id": 2,
           "name": "ไฟฟ้า",
-          "usage": 0,
-          "unit": "",
-          "cost": 0,
+          "usage": 3336000,
+          "unit": "kWh",
+          "cost": 13133947.2328,
           "production": 0,
           "usagePerProd": 0,
           "costPerProd": 0
@@ -6631,7 +6631,7 @@ var MULTI_YEAR_ENERGY_DATA = {
           "id": 3,
           "name": "น้ำมันเชื้อเพลิง",
           "usage": 0,
-          "unit": "",
+          "unit": "ลิตร",
           "cost": 0,
           "production": 0,
           "usagePerProd": 0,
@@ -6641,7 +6641,7 @@ var MULTI_YEAR_ENERGY_DATA = {
           "id": 4,
           "name": "แก๊ส (LPG)",
           "usage": 0,
-          "unit": "",
+          "unit": "กิโลกรัม",
           "cost": 0,
           "production": 0,
           "usagePerProd": 0,
@@ -8687,8 +8687,8 @@ var INITIAL_WATER_METERS_2569 = {
       "meterCode": "58470568 575-010 PS",
       "houseNo": "949",
       "location": "บ้านกู๋พจน์ คลัง 1,2",
-      "usage": 0,
-      "cost": 0
+      "usage": 722,
+      "cost": 12278.8064
     },
     {
       "id": 2,
@@ -8703,8 +8703,8 @@ var INITIAL_WATER_METERS_2569 = {
       "meterCode": "74738048 732-905 PS",
       "houseNo": "949/2",
       "location": "คลัง 3 / คลัง 4",
-      "usage": 0,
-      "cost": 0
+      "usage": 7799,
+      "cost": 133348.1508
     },
     {
       "id": 4,
@@ -8712,7 +8712,7 @@ var INITIAL_WATER_METERS_2569 = {
       "houseNo": "949/1",
       "location": "โรงฆ่าเก่า",
       "usage": 0,
-      "cost": 0
+      "cost": 673.03
     },
     {
       "id": 5,
@@ -8727,16 +8727,16 @@ var INITIAL_WATER_METERS_2569 = {
       "meterCode": "74850389 575-045 / 56188667 575-010 PS",
       "houseNo": "949/4-949/7",
       "location": "เฟส 5 / เฟส 6",
-      "usage": 0,
-      "cost": 0
+      "usage": 28964,
+      "cost": 495592.1568
     },
     {
       "id": 7,
       "meterCode": "74074261 575-040 / 58456013 575-020 PS",
       "houseNo": "999",
       "location": "โรงกุญเชียงตัวใหญ่ / ตัวเล็ก",
-      "usage": 0,
-      "cost": 0
+      "usage": 14099,
+      "cost": 240934.5108
     }
   ],
   "พฤศจิกายน": [
@@ -9386,56 +9386,56 @@ var INITIAL_ELEC_METERS_2569 = {
       "meterCode": "55161825",
       "houseNo": "949/1",
       "location": "หน้าร้านเก่า",
-      "usage": 0,
-      "cost": 0
+      "usage": 193000,
+      "cost": 828020.3667
     },
     {
       "id": 2,
       "meterCode": "55048446",
       "houseNo": "999",
       "location": "คลังสินค้า 1",
-      "usage": 0,
-      "cost": 0
+      "usage": 2000,
+      "cost": 9045.8228
     },
     {
       "id": 3,
       "meterCode": "55117509",
       "houseNo": "949",
       "location": "บ้านกู๋พจน์",
-      "usage": 0,
-      "cost": 0
+      "usage": 320000,
+      "cost": 1235573.0305
     },
     {
       "id": 4,
       "meterCode": "55213319",
       "houseNo": "999/2",
       "location": "ออฟฟิสคลัง 3",
-      "usage": 0,
-      "cost": 0
+      "usage": 745000,
+      "cost": 2865956.3516
     },
     {
       "id": 5,
       "meterCode": "95746027",
       "houseNo": "999/2-5",
       "location": "คลังสินค้า 4",
-      "usage": 0,
-      "cost": 0
+      "usage": 566000,
+      "cost": 2271522.7415
     },
     {
       "id": 6,
       "meterCode": "95887241",
       "houseNo": "999/5-949/7",
       "location": "เฟส 5-เฟส 6",
-      "usage": 0,
-      "cost": 0
+      "usage": 1451000,
+      "cost": 5678560.7912
     },
     {
       "id": 7,
       "meterCode": "95354741",
       "houseNo": "999,999/1",
       "location": "P&P",
-      "usage": 0,
-      "cost": 0
+      "usage": 59000,
+      "cost": 245268.1285
     }
   ],
   "พฤศจิกายน": [
