@@ -96,20 +96,13 @@ function loadStateFromStorage() {
 
     // Ensure 2569 July, August, September, and October are populated from latest dataset if empty or missing
     if (appState.multiYearData && appState.multiYearData["2569"]) {
-        ["กรกฎาคม", "สิงหาคม", "กันยายน"].forEach(m => {
+        ["กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม"].forEach(m => {
             const cur = appState.multiYearData["2569"][m];
             const def = MULTI_YEAR_ENERGY_DATA["2569"] && MULTI_YEAR_ENERGY_DATA["2569"][m];
-            if (def && (!cur || cur.production === 0 || cur.items.every(it => it.cost === 0))) {
+            if (def && (!cur || cur.production === 0 || cur.items.every(it => it.cost === 0) || (cur.items.find(i => i.id === 3)?.cost === 0 && def.items.find(i => i.id === 3)?.cost > 0))) {
                 appState.multiYearData["2569"][m] = JSON.parse(JSON.stringify(def));
             }
         });
-
-        // Ensure 2569 October is populated if empty or missing water/electric cost
-        const curOct = appState.multiYearData["2569"]["ตุลาคม"];
-        const defOct = MULTI_YEAR_ENERGY_DATA["2569"] && MULTI_YEAR_ENERGY_DATA["2569"]["ตุลาคม"];
-        if (defOct && (!curOct || curOct.items.every(it => it.cost === 0) || (curOct.items.find(i => i.id === 1)?.cost === 0 && defOct.items.find(i => i.id === 1)?.cost > 0))) {
-            appState.multiYearData["2569"]["ตุลาคม"] = JSON.parse(JSON.stringify(defOct));
-        }
     }
 
     if (savedWater) {

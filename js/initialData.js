@@ -6605,7 +6605,7 @@ var MULTI_YEAR_ENERGY_DATA = {
     "ตุลาคม": {
       "month": "ตุลาคม",
       "year": 2569,
-      "production": 0,
+      "production": 34430,
       "items": [
         {
           "id": 1,
@@ -6613,9 +6613,9 @@ var MULTI_YEAR_ENERGY_DATA = {
           "usage": 51584,
           "unit": "ลบ.ม.",
           "cost": 882826.6548,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "production": 34430,
+          "usagePerProd": 1.4982282892826024,
+          "costPerProd": 25.64120403136799
         },
         {
           "id": 2,
@@ -6623,29 +6623,29 @@ var MULTI_YEAR_ENERGY_DATA = {
           "usage": 3336000,
           "unit": "kWh",
           "cost": 13133947.2328,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "production": 34430,
+          "usagePerProd": 96.89224513505664,
+          "costPerProd": 381.468115968632
         },
         {
           "id": 3,
           "name": "น้ำมันเชื้อเพลิง",
-          "usage": 0,
+          "usage": 29599,
           "unit": "ลิตร",
-          "cost": 0,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "cost": 1124762,
+          "production": 34430,
+          "usagePerProd": 0.8596863200697067,
+          "costPerProd": 32.668080162648856
         },
         {
           "id": 4,
           "name": "แก๊ส (LPG)",
-          "usage": 0,
+          "usage": 49781,
           "unit": "กิโลกรัม",
-          "cost": 0,
-          "production": 0,
-          "usagePerProd": 0,
-          "costPerProd": 0
+          "cost": 1127151.36,
+          "production": 34430,
+          "usagePerProd": 1.4458611675864073,
+          "costPerProd": 32.73747778100494
         }
       ],
       "totalCost": 0,
